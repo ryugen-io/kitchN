@@ -35,6 +35,15 @@ sync:
 install-waybar:
     ./target/release/hyprcore install ./assets/fragments/waybar.frag
 
+
 # Uninstall everything
 uninstall:
     ./uninstall.sh
+
+# Pre-commit checks (Lint + Format)
+pre-commit:
+    cargo clippy -- -D warnings
+
+# Show demo logs
+show:
+    ./assets/scripts/demo_logs.sh

@@ -21,8 +21,9 @@ primary = "#FF79C6"    # light-magenta
 secondary = "#BD93F9"  # light-blue
 success = "#50FA7B"    # light-green
 error = "#FF5555"      # light-red
-warn = "#F1FA8C"       # light-yellow
+warn = "#FFB86C"       # orange (Dracula)
 info = "#8BE9FD"       # light-cyan
+orange = "#FFB86C"     # orange
 
 # Standard ANSI (Normal)
 black = "#44475A"

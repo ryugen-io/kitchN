@@ -221,3 +221,26 @@ msg = "running migrations"
 level = "success"
 scope = "DB"
 msg = "migrations complete"
+
+[presets.test_rich]
+level = "info"
+msg = "This is <bold>important</bold> and this is <primary>pink</primary>."
+scope = "TEST"
+
+
+[presets.demo_rich]
+level = "info"
+scope = "DEMO"
+msg = "Welcome to <primary>Hyprcore</primary>! Check out <success>success</success>, <error>error</error>, and <warn>warnings</warn>. <bold>Bold</bold> is also supported."
+
+
+[presets.warn]
+level = "warn"
+scope = "WARN"
+msg = "warning"
+
+[presets.error]
+level = "error"
+scope = "ERROR"
+msg = "error"
+
