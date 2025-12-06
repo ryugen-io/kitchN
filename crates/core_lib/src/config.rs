@@ -7,6 +7,7 @@ pub struct ThemeConfig {
     pub settings: ThemeSettings,
     pub colors: HashMap<String, String>,
     pub fonts: HashMap<String, String>, // Using HashMap to allow dynamic font keys like "mono", "ui", "size_mono"
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,6 +24,7 @@ pub struct ThemeSettings {
 pub struct IconsConfig {
     pub nerdfont: HashMap<String, String>,
     pub ascii: HashMap<String, String>,
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -31,6 +33,7 @@ pub struct LayoutConfig {
     pub labels: HashMap<String, String>,
     pub structure: StructureConfig,
     pub logging: LoggingConfig,
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -60,6 +63,7 @@ pub struct LoggingConfig {
 #[derive(Debug, Deserialize)]
 pub struct DictionaryConfig {
     pub presets: HashMap<String, Preset>,
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -95,11 +99,15 @@ pub enum ConfigError {
 impl HyprConfig {
     pub fn load() -> Result<Self, ConfigError> {
         let config_dir = Self::get_config_dir()?;
+        Self::load_from_dir(&config_dir)
+    }
 
-        let theme: ThemeConfig = Self::load_toml(&config_dir.join("theme.toml"))?;
-        let icons: IconsConfig = Self::load_toml(&config_dir.join("icons.toml"))?;
-        let layout: LayoutConfig = Self::load_toml(&config_dir.join("layout.toml"))?;
-        let dictionary: DictionaryConfig = Self::load_toml(&config_dir.join("dictionary.toml"))?;
+    pub fn load_from_dir(config_dir: &Path) -> Result<Self, ConfigError> {
+        let theme: ThemeConfig = Self::load_with_includes(&config_dir.join("theme.toml"))?;
+        let icons: IconsConfig = Self::load_with_includes(&config_dir.join("icons.toml"))?;
+        let layout: LayoutConfig = Self::load_with_includes(&config_dir.join("layout.toml"))?;
+        let dictionary: DictionaryConfig =
+            Self::load_with_includes(&config_dir.join("dictionary.toml"))?;
 
         Ok(HyprConfig {
             theme,
@@ -117,9 +125,63 @@ impl HyprConfig {
         Err(ConfigError::ConfigDirNotFound)
     }
 
-    fn load_toml<T: for<'a> Deserialize<'a>>(path: &Path) -> Result<T, ConfigError> {
-        let content = fs::read_to_string(path)?;
-        let config: T = toml::from_str(&content)?;
+    fn load_with_includes<T: for<'a> Deserialize<'a>>(path: &Path) -> Result<T, ConfigError> {
+        let value = Self::load_value_recursive(path)?;
+        let config: T = value.try_into()?;
         Ok(config)
+    }
+
+    fn load_value_recursive(path: &Path) -> Result<toml::Value, ConfigError> {
+        let content = fs::read_to_string(path)?;
+        let current_value: toml::Value = toml::from_str(&content)?;
+
+        // Check for "include" array of strings
+        let mut bases = Vec::new();
+
+        if let Some(includes) = current_value.get("include").and_then(|v| v.as_array()) {
+            for inc in includes {
+                if let Some(inc_str) = inc.as_str() {
+                    // Resolve path relative to current config file
+                    let inc_path = if let Some(parent) = path.parent() {
+                        parent.join(inc_str)
+                    } else {
+                        PathBuf::from(inc_str)
+                    };
+
+                    // Recursive load
+                    let base_value = Self::load_value_recursive(&inc_path)?;
+                    bases.push(base_value);
+                }
+            }
+        }
+
+        // Merge bases first (in order), then current on top
+        let mut final_value = if bases.is_empty() {
+            toml::Value::Table(toml::map::Map::new())
+        } else {
+            let mut acc = bases.remove(0);
+            for b in bases {
+                Self::deep_merge(&mut acc, b);
+            }
+            acc
+        };
+
+        Self::deep_merge(&mut final_value, current_value);
+        Ok(final_value)
+    }
+
+    fn deep_merge(target: &mut toml::Value, source: toml::Value) {
+        match (target, source) {
+            (toml::Value::Table(t), toml::Value::Table(s)) => {
+                for (k, v) in s {
+                    if let Some(existing) = t.get_mut(&k) {
+                        Self::deep_merge(existing, v);
+                    } else {
+                        t.insert(k, v);
+                    }
+                }
+            }
+            (t, s) => *t = s,
+        }
     }
 }
