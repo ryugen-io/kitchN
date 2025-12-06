@@ -1,3 +1,14 @@
+# =============================================================================
+# Hyprcore Layout - Log message structure and formatting
+# Sourcing: include = ["path/to/other.toml"]
+#
+# Legend:
+#   [structure] -> Templates for log output. Variables:
+#                  {tag} {scope} {icon} {msg} {timestamp} {level}
+#   [labels]    -> Text overrides for log levels (success -> "OK")
+#   [tag]       -> Formatting for the tag/level component
+# =============================================================================
+
 [tag]
 prefix = "["
 suffix = "]"

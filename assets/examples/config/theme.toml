@@ -1,3 +1,13 @@
+# =============================================================================
+# Hyprcore Theme - Colors, fonts, and visual settings
+# Sourcing: include = ["path/to/other.toml"]
+#
+# Legend:
+#   [colors]   -> Define palette using hex codes ("#RRGGBB")
+#   [fonts]    -> System font family names (use 'fc-list' to find)
+#   [settings] -> Global theme settings (e.g. active_icons="nerdfont")
+# =============================================================================
+
 [meta]
 name = "Sweet Dracula"
 

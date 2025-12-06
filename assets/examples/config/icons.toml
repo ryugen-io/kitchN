@@ -1,3 +1,13 @@
+# =============================================================================
+# Hyprcore Icons - Icon sets (Nerd Font, ASCII, etc.)
+# Sourcing: include = ["path/to/other.toml"]
+#
+# Legend:
+#   [nerdfont] -> Icons for 'nerdfont' active set (requires patched font)
+#   [ascii]    -> Fallback or simple text-based icons
+#   Keys       -> Maps specific internal names (success, error, net) to glyphs
+# =============================================================================
+
 [nerdfont]
 success = ""
 error = ""

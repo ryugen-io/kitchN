@@ -1,10 +1,73 @@
 # =============================================================================
 # Hyprcore Dictionary - Pre-defined log message presets
 # Usage: corelog preset <name> [SCOPE]
+# Sourcing: include = ["path/to/other.toml"]
+#
+# Legend:
+#   [presets.name] -> Defines a new preset 'name'
+#   level          -> Log level (success, info, warn, error)
+#   scope          -> Default scope label (optional, e.g. "SYSTEM")
+#   msg            -> Default message content
+# =============================================================================
+
+# #############################################################################
+# CORE PRESETS
+# DO NOT REMOVE OR RENAME THESE ENTRIES
+# Used internally by hyprcore binary
+# You may change the messages, but not the names or scopes
+# #############################################################################
+
+[presets.install_ok]
+level = "success"
+scope = "INSTALL"
+msg = "installed successfully"
+
+[presets.pack_ok]
+level = "success"
+scope = "PACK"
+msg = "package created"
+
+[presets.sync_start]
+level = "info"
+scope = "SYNC"
+msg = "syncing fragments"
+
+[presets.sync_empty]
+level = "info"
+scope = "SYNC"
+msg = "no fragments to sync"
+
+[presets.sync_ok]
+level = "success"
+scope = "SYNC"
+msg = "sync complete"
+
+[presets.list_empty]
+level = "info"
+scope = "LIST"
+msg = "no fragments installed"
+
+[presets.hook_run]
+level = "info"
+scope = "HOOK"
+msg = "running hooks"
+
+[presets.hook_ok]
+level = "success"
+scope = "HOOK"
+msg = "hooks executed"
+
+# #############################################################################
+# END OF SYSTEM PRESETS
+# #############################################################################
+
+# =============================================================================
+# Custom User Presets
+# Add your own presets below
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# System
+# System Events
 # -----------------------------------------------------------------------------
 
 [presets.boot_ok]
@@ -45,16 +108,6 @@ msg = "config saved"
 level = "success"
 scope = "BUILD"
 msg = "build complete"
-
-[presets.pack_ok]
-level = "success"
-scope = "PACK"
-msg = "package created"
-
-[presets.install_ok]
-level = "success"
-scope = "INSTALL"
-msg = "installed successfully"
 
 [presets.build_fail]
 level = "error"
@@ -149,36 +202,6 @@ level = "error"
 scope = "SSH"
 msg = "connection failed"
 
-[presets.sync_ok]
-level = "success"
-scope = "SYNC"
-msg = "sync complete"
-
-[presets.sync_start]
-level = "info"
-scope = "SYNC"
-msg = "syncing fragments"
-
-[presets.sync_empty]
-level = "info"
-scope = "SYNC"
-msg = "no fragments to sync"
-
-[presets.hook_run]
-level = "info"
-scope = "HOOK"
-msg = "running hooks"
-
-[presets.hook_ok]
-level = "success"
-scope = "HOOK"
-msg = "hooks executed"
-
-[presets.list_empty]
-level = "info"
-scope = "LIST"
-msg = "no fragments installed"
-
 [presets.sync_fail]
 level = "error"
 scope = "SYNC"
@@ -232,6 +255,10 @@ level = "success"
 scope = "DB"
 msg = "migrations complete"
 
+# -----------------------------------------------------------------------------
+# Examples / Misc
+# -----------------------------------------------------------------------------
+
 [presets.test_rich]
 level = "info"
 msg = "This is <bold>important</bold> and this is <primary>pink</primary>."
@@ -254,9 +281,7 @@ level = "error"
 scope = "ERROR"
 msg = "error"
 
-
 [presets.info]
 level = "info"
 scope = "INFO"
 msg = "info"
-
