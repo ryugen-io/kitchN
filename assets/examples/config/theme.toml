@@ -1,39 +1,39 @@
 [meta]
-name = "Cyberpunk Neon"
+name = "Sweet Dracula"
 
 [settings]
 active_icons = "nerdfont" # Reference to key in icons.toml
 
 [colors]
 # Special
-bg = "#161925"
+bg = "#161925"        # Sweet Dark Background
 fg = "#F8F8F2"
 cursor = "#8BE9FD"
 selection_bg = "#44475A"
 selection_fg = "#F8F8F2"
 
 # Tabs
-tabs = "#11131C"
+tabs = "#161925"      # Matches BG
 tabs_active = "#BD93F9"
 
 # Semantic (Hyprcore Mappings)
-primary = "#FF79C6"    # light-magenta
-secondary = "#BD93F9"  # light-blue
-success = "#50FA7B"    # light-green
-error = "#FF5555"      # light-red
-warn = "#FFB86C"       # orange (Dracula)
-info = "#8BE9FD"       # light-cyan
+primary = "#BD93F9"    # purple
+secondary = "#FF79C6"  # pink
+success = "#50FA7B"    # green
+error = "#FF5555"      # red
+warn = "#FFB86C"       # orange
+info = "#8BE9FD"       # cyan
 orange = "#FFB86C"     # orange
 
 # Standard ANSI (Normal)
 black = "#44475A"
-red = "#DE312B"
-green = "#2FD651"
-yellow = "#D0D662"
-blue = "#9C6FCF"
-magenta = "#DE559C"
-cyan = "#6AC5D3"
-white = "#D7D4C8"
+red = "#DE312B"        # Sweet Red
+green = "#2FD651"      # Sweet Green
+yellow = "#D0D662"     # Sweet Yellow
+blue = "#9C6FCF"       # Sweet Blue
+magenta = "#DE559C"    # Sweet Magenta
+cyan = "#6AC5D3"       # Sweet Cyan
+white = "#D7D4C8"      # Sweet White
 
 # Standard ANSI (Bright)
 bright_black = "#656B84"

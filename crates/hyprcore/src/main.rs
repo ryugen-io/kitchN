@@ -22,9 +22,9 @@ fn log(preset: &str) {
 fn hex_to_rgb(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     let s = try_get_value!("hex_to_rgb", "value", String, value);
     let hex = s.trim_start_matches('#');
-    
+
     if hex.len() != 6 {
-         return Err(tera::Error::msg(format!("Invalid hex color: {}", s)));
+        return Err(tera::Error::msg(format!("Invalid hex color: {}", s)));
     }
 
     let r = u8::from_str_radix(&hex[0..2], 16).map_err(|_| tera::Error::msg("Invalid hex"))?;
@@ -222,7 +222,8 @@ fn render_and_write(
     let target_path = PathBuf::from(&target_path_str);
 
     // Render Content
-    let rendered = tera.render_str(content_template, ctx)
+    let rendered = tera
+        .render_str(content_template, ctx)
         .context("Failed to render template")?;
 
     // Write

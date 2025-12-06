@@ -244,3 +244,9 @@ level = "error"
 scope = "ERROR"
 msg = "error"
 
+
+[presets.info]
+level = "info"
+scope = "INFO"
+msg = "info"
+
