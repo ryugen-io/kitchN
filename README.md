@@ -132,7 +132,7 @@ hyprcore list
 corelog error SYSTEM "Database connection failed"
 
 # Using a preset
-corelog preset boot_ok
+corelog boot_ok
 ```
 
 ---
@@ -193,6 +193,13 @@ Located in `~/.config/hyprcore/`.
 | `icons.toml` | Icon abstractions (nerdfont/ascii) |
 | `layout.toml` | Log structure & formatting |
 | `dictionary.toml` | Pre-defined messages |
+| `*.toml` | Any file can imply a modular config structure via `include` |
+
+### Modular Configuration
+You may split your configuration into multiple files using the `include` key in any of the above configuration files:
+```toml
+include = ["themes/dracula.toml", "themes/overrides.toml"]
+```
 
 ---
 
@@ -202,8 +209,8 @@ Optimized for speed with LTO and size optimizations:
 
 | Command | Time |
 |---------|------|
-| `pack` (100 frags) | ~15 ms |
-| `install` | ~9 ms |
+| `pack` (100 frags) | ~14 ms |
+| `install` (100 frags) | ~17 ms |
 | `list` | ~4 ms |
 
 Binary sizes:

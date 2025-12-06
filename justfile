@@ -47,3 +47,12 @@ pre-commit:
 # Show demo logs
 show:
     ./assets/scripts/demo_logs.sh
+
+# Audit dependencies
+audit:
+    cargo audit
+
+# Run benchmarks (Criterion + Hyperfine)
+bench:
+    cargo bench
+    ./assets/scripts/bench.sh

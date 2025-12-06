@@ -93,10 +93,12 @@ mod tests {
                 },
                 colors: HashMap::new(),
                 fonts: HashMap::new(),
+                include: None,
             },
             icons: IconsConfig {
                 nerdfont: HashMap::new(),
                 ascii: HashMap::new(),
+                include: None,
             },
             layout: LayoutConfig {
                 tag: TagConfig {
@@ -118,9 +120,11 @@ mod tests {
                     timestamp_format: "".to_string(),
                     write_by_default: false,
                 },
+                include: None,
             },
             dictionary: DictionaryConfig {
                 presets: HashMap::new(),
+                include: None,
             },
         }
     }
