@@ -42,7 +42,7 @@ uninstall:
 
 # Pre-commit checks (Lint + Format)
 pre-commit:
-    cargo clippy -- -D warnings
+    cargo clippy --all-targets --all-features -- -D warnings
 
 # Show demo logs
 show:
