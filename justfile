@@ -46,7 +46,7 @@ pre-commit:
 
 # Show demo logs
 show:
-    ./assets/scripts/demo_logs.sh
+    ../utils/hyprcore/demo_logs.sh
 
 # Audit dependencies
 audit:
@@ -55,7 +55,7 @@ audit:
 # Run benchmarks (Criterion + Hyperfine)
 bench:
     cargo bench
-    ./assets/scripts/bench.sh
+    ../utils/hyprcore/bench.sh
 
 # Run C++ FFI Example
 example-cpp: build
