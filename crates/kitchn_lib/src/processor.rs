@@ -67,13 +67,27 @@ fn process_ingredient(
     if let Some(cmd) = &pkg.hooks.reload {
         logger::log_to_terminal(config, "info", "HOOK", "running hooks");
 
-        let status = Command::new("sh")
+        let output = Command::new("sh")
             .arg("-c")
             .arg(cmd)
-            .status()
+            .output()
             .context("Failed to execute hook")?;
 
-        if status.success() {
+        if !output.stdout.is_empty() {
+            let s = String::from_utf8_lossy(&output.stdout);
+            for line in s.lines() {
+                logger::log_to_terminal(config, "info", "HOOK", line);
+            }
+        }
+
+        if !output.stderr.is_empty() {
+            let s = String::from_utf8_lossy(&output.stderr);
+            for line in s.lines() {
+                logger::log_to_terminal(config, "error", "HOOK", line);
+            }
+        }
+
+        if output.status.success() {
             logger::log_to_terminal(config, "success", "HOOK", "hooks executed");
         } else {
             logger::log_to_terminal(config, "error", "HOOK", "hooks failed");
