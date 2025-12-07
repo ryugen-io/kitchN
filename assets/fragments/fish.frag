@@ -1,5 +1,9 @@
-[meta]
-id = "hypr.fish"
+[package]
+name = "fish-theme"
+version = "0.1.0"
+authors = ["Hyprcore Team <team@hyprcore.io>"]
+description = "Fish shell integration for Hyprcore constants"
+license = "MIT"
 
 [[templates]]
 target = "~/.config/fish/conf.d/hypr_theme.fish"

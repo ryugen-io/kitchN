@@ -103,7 +103,7 @@ fn list_fragments(fragments_dir: &Path) -> Result<()> {
             if let Ok(pkg) = toml::from_str::<Fragment>(&content) {
                 println!(
                     "  {} ({})",
-                    pkg.meta.id,
+                    pkg.meta.name,
                     path.file_name().unwrap().to_string_lossy()
                 );
             } else {

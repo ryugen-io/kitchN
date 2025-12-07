@@ -1,5 +1,9 @@
-[meta]
-id = "brave"
+[package]
+name = "brave-theme"
+version = "0.1.0"
+authors = ["Hyprcore Team <team@hyprcore.io>"]
+description = "Browser theme generator for Brave/Chrome"
+license = "MIT"
 
 [[templates]]
 target = "~/.config/hyprcore/generated/brave_theme/manifest.json"

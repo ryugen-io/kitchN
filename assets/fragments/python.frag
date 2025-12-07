@@ -1,5 +1,9 @@
-[meta]
-id = "hypr.python"
+[package]
+name = "python-sdk"
+version = "0.1.0"
+authors = ["Hyprcore Team <team@hyprcore.io>"]
+description = "Python bindings and state caching"
+license = "MIT"
 
 [[templates]]
 # 1. Generate fast Cache

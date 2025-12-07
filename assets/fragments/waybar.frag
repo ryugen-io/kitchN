@@ -1,5 +1,9 @@
-[meta]
-id = "waybar"
+[package]
+name = "waybar-theme"
+version = "0.1.0"
+authors = ["Hyprcore Team <team@hyprcore.io>"]
+description = "Core Waybar styling integration"
+license = "MIT"
 
 [[templates]]
 target = "~/.config/waybar/style.css"

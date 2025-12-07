@@ -59,7 +59,14 @@ mod tests {
         let unpack_dir = dir.path().join("unpacked");
 
         fs::create_dir_all(&source_dir).unwrap();
-        fs::write(source_dir.join("test.frag"), "[meta]\nid = \"test\"").unwrap();
+        let frag_content = r#"
+[package]
+name = "test"
+version = "0.1"
+authors = ["Test"]
+description = "Test frag"
+"#;
+        fs::write(source_dir.join("test.frag"), frag_content).unwrap();
 
         pack(&source_dir, &output_file).unwrap();
         assert!(output_file.exists());
@@ -68,6 +75,6 @@ mod tests {
         assert!(unpack_dir.join("test.frag").exists());
 
         let content = fs::read_to_string(unpack_dir.join("test.frag")).unwrap();
-        assert!(content.contains("id = \"test\""));
+        assert!(content.contains("name = \"test\""));
     }
 }

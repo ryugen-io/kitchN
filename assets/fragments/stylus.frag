@@ -1,5 +1,9 @@
-[meta]
-id = "stylus"
+[package]
+name = "stylus-theme"
+version = "0.1.0"
+authors = ["Hyprcore Team <team@hyprcore.io>"]
+description = "Global user styles for web browsers"
+license = "MIT"
 
 [[templates]]
 target = "~/.config/hyprcore/generated/stylus/hyprcore.user.css"
