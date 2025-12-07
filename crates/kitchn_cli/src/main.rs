@@ -9,9 +9,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Log via corelog preset
+/// Log via kitchn-log preset
 fn log(preset: &str) {
-    let _ = Command::new("corelog").arg(preset).status();
+    let _ = Command::new("kitchn-log").arg(preset).status();
 }
 
 #[derive(Parser)]
@@ -116,7 +116,7 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<()> {
 
 fn list_db(db: &Pantry) {
     use colored::*;
-    println!("{}", "\nInstalled Fragments (Database):\n".bold().underline());
+    println!("{}", "\nInstalled Ingredients (Database):\n".bold().underline());
 
     let fragments = db.list();
     if fragments.is_empty() {
