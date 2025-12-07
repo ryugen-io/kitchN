@@ -1,0 +1,353 @@
+# System Presets (Default)
+[presets.boot_ok]
+level = "success"
+scope = "SYSTEM"
+msg = "startup complete"
+
+[presets.shutdown]
+level = "info"
+scope = "SYSTEM"
+msg = "shutting down"
+
+[presets.service_start]
+level = "success"
+msg = "service started"
+
+[presets.service_stop]
+level = "info"
+msg = "service stopped"
+
+[presets.service_fail]
+level = "error"
+msg = "service failed"
+
+# Development
+[presets.build_ok]
+level = "success"
+scope = "BUILD"
+msg = "build complete"
+
+[presets.pack_ok]
+level = "success"
+scope = "PACK"
+msg = "package created"
+
+[presets.install_ok]
+level = "success"
+scope = "INSTALL"
+msg = "installed successfully"
+
+[presets.build_fail]
+level = "error"
+scope = "BUILD"
+msg = "build failed"
+
+[presets.test_pass]
+level = "success"
+scope = "TEST"
+msg = "all tests passed"
+
+[presets.test_fail]
+level = "error"
+scope = "TEST"
+msg = "tests failed"
+
+[presets.deploy_ok]
+level = "success"
+scope = "DEPLOY"
+msg = "deployed successfully"
+
+# Docker
+[presets.container_start]
+level = "success"
+scope = "DOCKER"
+msg = "container started"
+
+[presets.container_stop]
+level = "info"
+scope = "DOCKER"
+msg = "container stopped"
+
+# Network
+[presets.net_up]
+level = "success"
+scope = "NET"
+msg = "network connected"
+
+[presets.net_down]
+level = "warn"
+scope = "NET"
+msg = "network disconnected"
+
+[presets.ssh_ok]
+level = "success"
+scope = "SSH"
+msg = "connection established"
+
+[presets.sync_ok]
+level = "success"
+scope = "SYNC"
+msg = "sync complete"
+
+[presets.sync_start]
+level = "info"
+scope = "SYNC"
+msg = "syncing ingredients"
+
+[presets.sync_empty]
+level = "info"
+scope = "SYNC"
+msg = "no ingredients to sync"
+
+[presets.list_empty]
+level = "info"
+scope = "LIST"
+msg = "no ingredients installed"
+
+# Backup
+[presets.backup_start]
+level = "info"
+scope = "BACKUP"
+msg = "backup started"
+
+[presets.backup_ok]
+level = "success"
+scope = "BACKUP"
+msg = "backup complete"
+
+[presets.backup_fail]
+level = "error"
+scope = "BACKUP"
+msg = "backup failed"
+
+# Memory Check
+[presets.memcheck_start]
+level = "info"
+scope = "MEMCHECK"
+msg = "running memory check"
+
+[presets.memcheck_ok]
+level = "success"
+scope = "MEMCHECK"
+msg = "no memory leaks detected"
+
+[presets.memcheck_fail]
+level = "error"
+scope = "MEMCHECK"
+msg = "memory issues detected"
+
+[presets.memcheck_compile]
+level = "info"
+scope = "MEMCHECK"
+msg = "compiling with sanitizers"
+
+# Database
+[presets.db_connect]
+level = "success"
+scope = "DB"
+msg = "connected"
+
+[presets.db_fail]
+level = "error"
+scope = "DB"
+msg = "connection refused"
+
+# Hooks (Default)
+[presets.hook_run]
+level = "info"
+scope = "HOOK"
+msg = "running hooks"
+
+[presets.hook_ok]
+level = "success"
+scope = "HOOK"
+msg = "hooks executed"
+
+[presets.hook_fail]
+level = "error"
+scope = "HOOK"
+msg = "hooks failed"
+
+[presets.hook_stdout]
+level = "info"
+scope = "HOOK"
+msg = "output"
+
+[presets.hook_stderr]
+level = "error"
+scope = "HOOK"
+msg = "error"
+
+[presets.shutdown]
+level = "info"
+scope = "SYSTEM"
+msg = "shutting down"
+
+[presets.service_start]
+level = "success"
+msg = "service started"
+
+[presets.service_stop]
+level = "info"
+msg = "service stopped"
+
+[presets.service_fail]
+level = "error"
+msg = "service failed"
+
+# Development
+[presets.build_ok]
+level = "success"
+scope = "BUILD"
+msg = "build complete"
+
+[presets.pack_ok]
+level = "success"
+scope = "PACK"
+msg = "package created"
+
+[presets.install_ok]
+level = "success"
+scope = "INSTALL"
+msg = "installed successfully"
+
+[presets.build_fail]
+level = "error"
+scope = "BUILD"
+msg = "build failed"
+
+[presets.test_pass]
+level = "success"
+scope = "TEST"
+msg = "all tests passed"
+
+[presets.test_fail]
+level = "error"
+scope = "TEST"
+msg = "tests failed"
+
+[presets.deploy_ok]
+level = "success"
+scope = "DEPLOY"
+msg = "deployed successfully"
+
+# Docker
+[presets.container_start]
+level = "success"
+scope = "DOCKER"
+msg = "container started"
+
+[presets.container_stop]
+level = "info"
+scope = "DOCKER"
+msg = "container stopped"
+
+# Network
+[presets.net_up]
+level = "success"
+scope = "NET"
+msg = "network connected"
+
+[presets.net_down]
+level = "warn"
+scope = "NET"
+msg = "network disconnected"
+
+[presets.ssh_ok]
+level = "success"
+scope = "SSH"
+msg = "connection established"
+
+[presets.sync_ok]
+level = "success"
+scope = "SYNC"
+msg = "sync complete"
+
+[presets.sync_start]
+level = "info"
+scope = "SYNC"
+msg = "syncing ingredients"
+
+[presets.sync_empty]
+level = "info"
+scope = "SYNC"
+msg = "no ingredients to sync"
+
+[presets.list_empty]
+level = "info"
+scope = "LIST"
+msg = "no ingredients installed"
+
+# Backup
+[presets.backup_start]
+level = "info"
+scope = "BACKUP"
+msg = "backup started"
+
+[presets.backup_ok]
+level = "success"
+scope = "BACKUP"
+msg = "backup complete"
+
+[presets.backup_fail]
+level = "error"
+scope = "BACKUP"
+msg = "backup failed"
+
+# Memory Check
+[presets.memcheck_start]
+level = "info"
+scope = "MEMCHECK"
+msg = "running memory check"
+
+[presets.memcheck_ok]
+level = "success"
+scope = "MEMCHECK"
+msg = "no memory leaks detected"
+
+[presets.memcheck_fail]
+level = "error"
+scope = "MEMCHECK"
+msg = "memory issues detected"
+
+[presets.memcheck_compile]
+level = "info"
+scope = "MEMCHECK"
+msg = "compiling with sanitizers"
+
+# Database
+[presets.db_connect]
+level = "success"
+scope = "DB"
+msg = "connected"
+
+[presets.db_fail]
+level = "error"
+scope = "DB"
+msg = "connection refused"
+
+# Hooks
+[presets.hook_run]
+level = "secondary"
+scope = "HOOK"
+msg = "running hooks"
+
+[presets.hook_ok]
+level = "success"
+scope = "HOOK"
+msg = "hooks executed"
+
+[presets.hook_fail]
+level = "error"
+scope = "HOOK"
+msg = "hooks failed"
+
+[presets.hook_stdout]
+level = "info"
+scope = "HOOK"
+msg = "output"
+
+[presets.hook_stderr]
+level = "error"
+scope = "HOOK"
+msg = "error"

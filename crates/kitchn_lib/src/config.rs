@@ -138,11 +138,43 @@ impl Cookbook {
         }
 
         // Fallback: Load from TOML files
+        // Fallback: Load from TOML files
         let theme: ThemeConfig = Self::load_with_includes(&config_dir.join("theme.toml"))?;
         let icons: IconsConfig = Self::load_with_includes(&config_dir.join("icons.toml"))?;
         let layout: LayoutConfig = Self::load_with_includes(&config_dir.join("layout.toml"))?;
-        let dictionary: DictionaryConfig =
-            Self::load_with_includes(&config_dir.join("dictionary.toml"))?;
+        
+        // Load System Dictionary (simulated location or actual file)
+        // For now, we assume it's next to the user config, perhaps named system_dictionary.toml
+        // Or better, we load it if present, otherwise we assume defaults are handled elsewhere (which is what we are trying to avoid)
+        // Let's check for "defaults/system_dictionary.toml" relative to config dir if user installs it there?
+        // Or simply check for "system_dictionary.toml" in config dir.
+        let sys_dict_path = config_dir.join("system_dictionary.toml");
+        let mut dictionary: DictionaryConfig = if sys_dict_path.exists() {
+             Self::load_with_includes(&sys_dict_path)?
+        } else {
+            // Fallback to empty if system dict missing? Or maybe we should allow partial loading.
+             DictionaryConfig { presets: HashMap::new(), include: None }
+        };
+
+        let user_dict_path = config_dir.join("dictionary.toml");
+        if user_dict_path.exists() {
+            let user_dict: DictionaryConfig = Self::load_with_includes(&user_dict_path)?;
+            // Merge user dict into system dict (user overrides system)
+            // Simplified merge logic: iterate and insert/replace
+            for (curr_k, curr_v) in user_dict.presets {
+                 dictionary.presets.insert(curr_k, curr_v);
+            }
+            // Start of naive merge for include
+            if let Some(user_inc) = user_dict.include {
+                 dictionary.include = match dictionary.include {
+                     Some(mut sys_inc) => {
+                         sys_inc.extend(user_inc);
+                         Some(sys_inc)
+                     }
+                     None => Some(user_inc)
+                 };
+            }
+        }
 
         Ok(Cookbook {
             theme,
