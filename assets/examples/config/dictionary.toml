@@ -285,3 +285,13 @@ msg = "error"
 level = "info"
 scope = "INFO"
 msg = "info"
+
+[presets.success]
+level = "success"
+scope = "OK"
+msg = "success"
+
+[presets.boot_wait]
+level = "info"
+scope = "WAIT"
+msg = "processing..."
