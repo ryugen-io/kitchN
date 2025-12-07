@@ -77,4 +77,4 @@ examples: example-cpp example-python example-rust
 
 # Show project statistics (LOC, Sizes)
 stats:
-    ../utils/stats.sh .
+    ../utils/hyprcore/stats.sh .
