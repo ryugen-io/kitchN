@@ -34,3 +34,7 @@ harness = false
 [[bench]]
 name = "render_bench"
 harness = false
+
+[[bench]]
+name = "db_bench"
+harness = false

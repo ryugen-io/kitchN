@@ -753,6 +753,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "serde",
+ "tempfile",
  "tera",
  "thiserror 2.0.17",
  "toml 0.8.23",

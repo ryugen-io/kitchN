@@ -18,17 +18,21 @@ impl FragmentsDb {
             fragments: HashMap::new(),
         };
 
-        if path.exists() {
-            let file = File::open(path).context("Failed to open fragments database")?;
-            let mut reader = BufReader::new(file);
-            
-            // Using bincode 2.0 serde integration
-            let data: HashMap<String, Fragment> = bincode::serde::decode_from_std_read(
-                &mut reader, 
-                bincode::config::standard()
-            ).context("Failed to decode fragments database")?;
-            
-            db.fragments = data;
+                if path.exists() {
+            // Check if file is empty (e.g. newly created by NamedTempFile or touch)
+            let len = fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+            if len > 0 {
+                let file = File::open(path).context("Failed to open fragments database")?;
+                let mut reader = BufReader::new(file);
+                
+                // Using bincode 2.0 serde integration
+                let data: HashMap<String, Fragment> = bincode::serde::decode_from_std_read(
+                    &mut reader, 
+                    bincode::config::standard()
+                ).context("Failed to decode fragments database")?;
+                
+                db.fragments = data;
+            }
         }
         Ok(db)
     }
