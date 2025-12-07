@@ -4,8 +4,8 @@ use std::os::raw::{c_char, c_int};
 use std::path::Path;
 use std::ptr;
 
-use crate::config::HyprConfig;
-use crate::{logger, packager, processor};
+use hcore_lib::config::HyprConfig;
+use hcore_lib::{logger, packager, processor, fragment};
 
 /// Opaque context pointer (wraps HyprConfig with error storage)
 pub struct HCoreContext {
@@ -23,7 +23,7 @@ impl HCoreContext {
     }
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 pub extern "C" fn hcore_context_new() -> *mut HCoreContext {
     match HyprConfig::load() {
         Ok(cfg) => {
@@ -37,7 +37,7 @@ pub extern "C" fn hcore_context_new() -> *mut HCoreContext {
     }
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers.
@@ -58,7 +58,7 @@ pub unsafe extern "C" fn hcore_context_free(ctx: *mut HCoreContext) {
 /// This function is unsafe because it dereferences raw pointers.
 /// * `ctx` must be a valid pointer to `HCoreContext` created by `hcore_context_new`.
 /// * `buffer` must be a valid pointer to a writable memory region of at least `len` bytes.
-#[unsafe(no_mangle)]
+#[no_mangle]
 pub unsafe extern "C" fn hcore_get_last_error(
     ctx: *mut HCoreContext,
     buffer: *mut c_char,
@@ -90,7 +90,7 @@ pub unsafe extern "C" fn hcore_get_last_error(
     0 // No error
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers.
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn hcore_log(
     }
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers.
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn hcore_pack(
     }
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers.
@@ -182,7 +182,7 @@ pub unsafe extern "C" fn hcore_unpack(
     }
 }
 
-#[unsafe(no_mangle)]
+#[no_mangle]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers.
@@ -195,15 +195,24 @@ pub unsafe extern "C" fn hcore_install(ctx: *mut HCoreContext, path: *const c_ch
     let context = unsafe { &*ctx };
     context.clear_error();
 
-    unsafe {
-        let p = CStr::from_ptr(path).to_string_lossy();
-
-        match processor::install(Path::new(&*p), &context.config) {
-            Ok(_) => 0,
+    let p = unsafe { CStr::from_ptr(path).to_string_lossy() };
+        match std::fs::read_to_string(Path::new(&*p)) {
+            Ok(content) => match toml::from_str::<fragment::Fragment>(&content) {
+                Ok(pkg) => match processor::apply(&pkg, &context.config) {
+                    Ok(_) => 0,
+                    Err(e) => {
+                        context.set_error(format!("Apply error: {:#}", e));
+                        1
+                    }
+                },
+                Err(e) => {
+                     context.set_error(format!("Parse error: {:#}", e));
+                     1
+                }
+            },
             Err(e) => {
-                context.set_error(format!("{:#}", e));
+                context.set_error(format!("File read error: {:#}", e));
                 1
             }
         }
-    }
 }

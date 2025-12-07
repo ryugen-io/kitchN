@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 use tera::{Context as TeraContext, Tera};
 
@@ -11,7 +11,7 @@ use crate::logger;
 use std::collections::HashMap;
 use tera::{Value, to_value, try_get_value};
 
-pub fn install(path: &Path, config: &HyprConfig) -> Result<()> {
+pub fn apply(fragment: &Fragment, config: &HyprConfig) -> Result<()> {
     let mut tera = Tera::default();
     tera.register_filter("hex_to_rgb", hex_to_rgb);
 
@@ -28,7 +28,7 @@ pub fn install(path: &Path, config: &HyprConfig) -> Result<()> {
     };
     ctx.insert("icons", active_icons);
 
-    process_fragment(path, &mut tera, &mut ctx, config)
+    process_fragment(fragment, &mut tera, &mut ctx, config)
 }
 
 /// Tera filter: hex_to_rgb
@@ -48,14 +48,11 @@ fn hex_to_rgb(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Val
 }
 
 fn process_fragment(
-    path: &Path,
+    pkg: &Fragment,
     tera: &mut Tera,
     ctx: &mut TeraContext,
     config: &HyprConfig,
 ) -> Result<()> {
-    let content = fs::read_to_string(path)?;
-    let pkg: Fragment = toml::from_str(&content).context(format!("Failed to parse {:?}", path))?;
-
     // Render Templates
     for tpl in &pkg.templates {
         render_and_write(&tpl.target, &tpl.content, tera, ctx)?;

@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Fragment {
     #[serde(alias = "package")]
     pub meta: FragmentManifest,
@@ -12,7 +12,7 @@ pub struct Fragment {
     pub hooks: Hooks,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FragmentManifest {
     pub name: String,
     pub version: String,
@@ -31,13 +31,13 @@ impl FragmentManifest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Template {
     pub target: String,
     pub content: String,
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Hooks {
     pub reload: Option<String>,
 }

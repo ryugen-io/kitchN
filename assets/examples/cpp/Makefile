@@ -1,9 +1,9 @@
 CXX = g++
 CXXFLAGS = -I../../../include -L../../../target/release -Wall
-LIBS = -lhcore_lib -lpthread -ldl -lm
+LIBS = -lhcore_ffi -lpthread -ldl -lm
 
 # Ensure we can find the shared library at runtime
-# NOTE: In a real install, libhcore_lib.so would be in /usr/lib
+# NOTE: In a real install, libhcore_ffi.so would be in /usr/lib
 RUST_LIB_PATH = ../../../target/release
 
 all: main

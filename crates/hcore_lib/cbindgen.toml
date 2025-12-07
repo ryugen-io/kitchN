@@ -1,12 +1,13 @@
 language = "C"
-include_guard = "HCORE_H"
-style = "type"
-newline = "\n"
 
 [export]
-prefix = "hcore_"
-item_types = ["functions", "structs", "enums"]
-
-[parse]
-parse_deps = true
-include = ["hcore_lib"]
+include = [
+    "hcore_context_new",
+    "hcore_context_free",
+    "hcore_get_last_error",
+    "hcore_log",
+    "hcore_pack",
+    "hcore_unpack",
+    "hcore_install",
+    "HCoreContext"
+]

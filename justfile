@@ -74,3 +74,7 @@ example-rust:
 
 # Run all examples
 examples: example-cpp example-python example-rust
+
+# Show project statistics (LOC, Sizes)
+stats:
+    ../utils/stats.sh .

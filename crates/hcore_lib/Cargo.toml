@@ -19,5 +19,7 @@ tera = "1.20.1"
 anyhow = "1.0.100"
 chrono = "0.4.39"
 libc = "0.2.169"
+bincode = { version = "2.0.1", features = ["serde"] }
+
 [build-dependencies]
 cbindgen = "0.29.2"

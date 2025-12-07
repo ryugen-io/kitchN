@@ -1,0 +1,16 @@
+[package]
+name = "hcore_ffi"
+version = "0.2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+hcore_lib = { path = "../hcore_lib" }
+libc = "0.2.169"
+toml = "0.8.19"
+serde = { version = "1.0.216", features = ["derive"] }
+
+[build-dependencies]
+cbindgen = "0.29.2"
