@@ -289,6 +289,27 @@ level = "error"
 scope = "BACKUP"
 msg = "backup failed"
 
+# Memory Check
+[presets.memcheck_start]
+level = "info"
+scope = "MEMCHECK"
+msg = "running memory check"
+
+[presets.memcheck_ok]
+level = "success"
+scope = "MEMCHECK"
+msg = "no memory leaks detected"
+
+[presets.memcheck_fail]
+level = "error"
+scope = "MEMCHECK"
+msg = "memory issues detected"
+
+[presets.memcheck_compile]
+level = "info"
+scope = "MEMCHECK"
+msg = "compiling with sanitizers"
+
 # Database
 [presets.db_connect]
 level = "success"
