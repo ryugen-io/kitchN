@@ -50,11 +50,16 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Install { path } => {
-            install_to_pantry(&path, &mut db)?;
+            let installed = install_to_pantry(&path, &mut db)?;
             db.save()?;
             log("install_ok");
-            // Auto-sync after install
-            sync_db(&db)?;
+            
+            // Apply only the newly installed ingredients
+            let config = Cookbook::load().context("Failed to load Kitchn cookbook")?;
+            for pkg in installed {
+                println!("Applying: {}", pkg.meta.name);
+                processor::apply(&pkg, &config)?;
+            }
         }
         Commands::Pack { input, output } => {
             let out = output.unwrap_or_else(|| {
@@ -78,7 +83,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<()> {
+fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
+    let mut installed_list = Vec::new();
+
     if !path.exists() {
         return Err(anyhow!("File not found: {:?}", path));
     }
@@ -99,7 +106,11 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<()> {
                     .with_context(|| format!("Failed to parse ingredient inside zip: {}", file.name()))?;
                 
                 println!("Stocking from pantry: {}", pkg.meta.name);
+                // We clone here because store takes ownership, but we want to return it too
+                // Or proper: store takes ownership. We can clone before storing.
+                let pkg_clone = pkg.clone();
                 db.store(pkg)?;
+                installed_list.push(pkg_clone);
             }
         }
     } else {
@@ -109,9 +120,11 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<()> {
             .with_context(|| format!("Failed to parse ingredient: {:?}", path))?;
             
         println!("Stocking ingredient: {}", pkg.meta.name);
+        let pkg_clone = pkg.clone();
         db.store(pkg)?;
+        installed_list.push(pkg_clone);
     }
-    Ok(())
+    Ok(installed_list)
 }
 
 fn list_db(db: &Pantry) {
