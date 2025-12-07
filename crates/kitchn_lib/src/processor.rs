@@ -65,7 +65,20 @@ fn process_ingredient(
 
     // Run Hooks
     if let Some(cmd) = &pkg.hooks.reload {
-        logger::log_to_terminal(config, "info", "HOOK", "running hooks");
+        // Retrieve presets or fall back to defaults
+        let (run_lvl, run_scope, run_msg) = config.dictionary.presets.get("hook_run")
+            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+            .unwrap_or(("secondary", "HOOK", "running hooks"));
+
+        let (ok_lvl, ok_scope, ok_msg) = config.dictionary.presets.get("hook_ok")
+            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+            .unwrap_or(("success", "HOOK", "hooks executed"));
+            
+        let (err_lvl, err_scope, err_msg) = config.dictionary.presets.get("hook_fail")
+            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+            .unwrap_or(("error", "HOOK", "hooks failed"));
+
+        logger::log_to_terminal(config, run_lvl, run_scope, run_msg);
 
         let output = Command::new("sh")
             .arg("-c")
@@ -76,21 +89,23 @@ fn process_ingredient(
         if !output.stdout.is_empty() {
             let s = String::from_utf8_lossy(&output.stdout);
             for line in s.lines() {
-                logger::log_to_terminal(config, "info", "HOOK", line);
+                // For output lines, we stick with 'info' or maybe reuse run_lvl? 
+                // Let's stick with 'info' to keep it distinct from the header buffer
+                logger::log_to_terminal(config, "info", run_scope, line);
             }
         }
 
         if !output.stderr.is_empty() {
             let s = String::from_utf8_lossy(&output.stderr);
             for line in s.lines() {
-                logger::log_to_terminal(config, "error", "HOOK", line);
+                logger::log_to_terminal(config, "error", run_scope, line);
             }
         }
 
         if output.status.success() {
-            logger::log_to_terminal(config, "success", "HOOK", "hooks executed");
+            logger::log_to_terminal(config, ok_lvl, ok_scope, ok_msg);
         } else {
-            logger::log_to_terminal(config, "error", "HOOK", "hooks failed");
+            logger::log_to_terminal(config, err_lvl, err_scope, err_msg);
         }
     }
 
