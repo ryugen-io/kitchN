@@ -37,6 +37,73 @@ level = "success"
 scope = "INSTALL"
 msg = "installed successfully"
 
+# Bake
+[presets.bake_start]
+level = "info"
+scope = "BAKE"
+msg = "baking recipe"
+
+[presets.bake_ok]
+level = "success"
+scope = "BAKE"
+msg = "recipe baked"
+
+[presets.bake_fail]
+level = "error"
+scope = "BAKE"
+msg = "baking failed"
+
+# Stats
+[presets.stats_analyzing]
+level = "info"
+scope = "STATS"
+msg = "analyzing project"
+
+[presets.stats_bin_check]
+level = "info"
+scope = "BIN"
+msg = "checking binaries"
+
+[presets.stats_bin_warn]
+level = "warn"
+scope = "BIN"
+msg = "binaries missing"
+
+[presets.stats_lib_ok]
+level = "success"
+scope = "LIB"
+msg = "library found"
+
+[presets.stats_cli_ok]
+level = "success"
+scope = "CLI"
+msg = "cli tool found"
+
+[presets.stats_log_ok]
+level = "success"
+scope = "LOG"
+msg = "logger found"
+
+[presets.stats_loc_calc]
+level = "info"
+scope = "LOC"
+msg = "calculating metrics"
+
+[presets.stats_files_top]
+level = "info"
+scope = "FILES"
+msg = "top files"
+
+[presets.stats_file_entry]
+level = "info"
+scope = "FILE"
+msg = "file"
+
+[presets.stats_done]
+level = "success"
+scope = "DONE"
+msg = "analysis complete"
+
 [presets.build_fail]
 level = "error"
 scope = "BUILD"
