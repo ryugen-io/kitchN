@@ -56,3 +56,21 @@ audit:
 bench:
     cargo bench
     ./assets/scripts/bench.sh
+
+# Run C++ FFI Example
+example-cpp: build
+    @echo "Running C++ Example..."
+    cd assets/examples/cpp && make main && ./main
+
+# Run Python FFI Example
+example-python: build
+    @echo "Running Python Example..."
+    cd assets/examples/python && python3 main.py
+
+# Run Rust Native Example
+example-rust:
+    @echo "Running Rust Example..."
+    cd assets/examples/rust && cargo run
+
+# Run all examples
+examples: example-cpp example-python example-rust
