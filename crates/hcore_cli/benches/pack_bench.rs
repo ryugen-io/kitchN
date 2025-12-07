@@ -1,5 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use hcore_cli::packager::{pack, unpack};
+use hcore_lib::packager::{pack, unpack};
 use std::fs;
 use tempfile::tempdir;
 
