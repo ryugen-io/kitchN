@@ -143,28 +143,22 @@ impl Cookbook {
         let icons: IconsConfig = Self::load_with_includes(&config_dir.join("icons.toml"))?;
         let layout: LayoutConfig = Self::load_with_includes(&config_dir.join("layout.toml"))?;
         
-        // Load System Dictionary (simulated location or actual file)
-        // For now, we assume it's next to the user config, perhaps named system_dictionary.toml
-        // Or better, we load it if present, otherwise we assume defaults are handled elsewhere (which is what we are trying to avoid)
-        // Let's check for "defaults/system_dictionary.toml" relative to config dir if user installs it there?
-        // Or simply check for "system_dictionary.toml" in config dir.
-        let sys_dict_path = config_dir.join("system_dictionary.toml");
-        let mut dictionary: DictionaryConfig = if sys_dict_path.exists() {
-             Self::load_with_includes(&sys_dict_path)?
-        } else {
-            // Fallback to empty if system dict missing? Or maybe we should allow partial loading.
-             DictionaryConfig { presets: HashMap::new(), include: None }
-        };
+        // Load System Dictionary (Embedded)
+        // This ensures defaults are always available without external files
+        const SYSTEM_DICTIONARY: &str = include_str!("../../../assets/defaults/system_dictionary.toml");
+        
+        // Parse embedded defaults
+        let mut dictionary: DictionaryConfig = toml::from_str(SYSTEM_DICTIONARY)
+            .map_err(ConfigError::Toml)?;
 
         let user_dict_path = config_dir.join("dictionary.toml");
         if user_dict_path.exists() {
             let user_dict: DictionaryConfig = Self::load_with_includes(&user_dict_path)?;
             // Merge user dict into system dict (user overrides system)
-            // Simplified merge logic: iterate and insert/replace
             for (curr_k, curr_v) in user_dict.presets {
                  dictionary.presets.insert(curr_k, curr_v);
             }
-            // Start of naive merge for include
+            // Merge includes if present
             if let Some(user_inc) = user_dict.include {
                  dictionary.include = match dictionary.include {
                      Some(mut sys_inc) => {
