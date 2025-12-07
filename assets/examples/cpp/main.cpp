@@ -17,6 +17,10 @@ int main() {
   hcore_log(ctx, "info", "cpp_example", "Hello from C++ via FFI!");
   hcore_log(ctx, "warn", "cpp_example", "This uses the shared library!");
 
+  std::cout << "Testing Presets..." << std::endl;
+  hcore_log_preset(ctx, "test_pass", nullptr);
+  hcore_log_preset(ctx, "info", "Overridden preset message from C++!");
+
   // 3. Error Handling Example (simulated failure)
   std::cout << "\nAttempting to pack a non-existent directory..." << std::endl;
   int result = hcore_pack(ctx, "/path/to/nothing", "output.fpkg");

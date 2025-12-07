@@ -37,6 +37,8 @@ enum Commands {
     Sync,
     /// List fragments in database
     List,
+    /// Bake configuration into binary cache for faster startup
+    Bake,
 }
 
 fn main() -> Result<()> {
@@ -67,6 +69,9 @@ fn main() -> Result<()> {
         }
         Commands::List => {
             list_db(&db);
+        }
+        Commands::Bake => {
+            bake_config(&dirs)?;
         }
     }
 
@@ -149,5 +154,37 @@ fn sync_db(db: &FragmentsDb) -> Result<()> {
     }
 
     log("sync_ok");
+    Ok(())
+}
+
+fn bake_config(dirs: &ProjectDirs) -> Result<()> {
+    log("bake_start");
+    let config_dir = dirs.config_dir();
+    let cache_dir = dirs.cache_dir();
+    
+    // Force load from TOMLs by bypassing load() which might use stale cache
+    // We use load_from_dir but strictly speaking load_from_dir will use cache if fresh.
+    // We force refresh by deleting the bin first.
+    
+    let bin_path = cache_dir.join("config.bin");
+    if bin_path.exists() {
+        let _ = fs::remove_file(&bin_path);
+    } 
+
+    // Now load will definitely parse TOMLs
+    match HyprConfig::load_from_dir(config_dir) {
+        Ok(config) => {
+            if let Err(e) = config.save_binary(&bin_path) {
+                log("bake_fail");
+                return Err(anyhow!("Failed to save binary config: {}", e));
+            }
+            log("bake_ok");
+        }
+        Err(e) => {
+             log("bake_fail");
+             return Err(anyhow!("Failed to load configuration: {}", e));
+        }
+    }
+    
     Ok(())
 }

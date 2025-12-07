@@ -125,6 +125,54 @@ pub unsafe extern "C" fn hcore_log(
 ///
 /// This function is unsafe because it dereferences raw pointers.
 /// * `ctx` must be a valid pointer to `HCoreContext`.
+/// * `preset_key` must be a valid, null-terminated C string.
+/// * `msg_override` can be null. If not null, must be valid, null-terminated C string.
+pub unsafe extern "C" fn hcore_log_preset(
+    ctx: *mut HCoreContext,
+    preset_key: *const c_char,
+    msg_override: *const c_char,
+) -> c_int {
+    if ctx.is_null() || preset_key.is_null() {
+        return 1;
+    }
+
+    let context = unsafe { &*ctx };
+    context.clear_error();
+
+    let key = unsafe { CStr::from_ptr(preset_key).to_string_lossy() };
+
+    let preset = match context.config.dictionary.presets.get(key.as_ref()) {
+        Some(p) => p,
+        None => {
+            context.set_error(format!("Preset '{}' not found", key));
+            return 1;
+        }
+    };
+
+    let level = &preset.level;
+    let scope = preset.scope.as_deref().unwrap_or("");
+    
+    let msg_default = &preset.msg;
+    let msg_final = if !msg_override.is_null() {
+        unsafe { CStr::from_ptr(msg_override).to_string_lossy() }
+    } else {
+        std::borrow::Cow::Borrowed(msg_default.as_str())
+    };
+
+    logger::log_to_terminal(&context.config, level, scope, &msg_final);
+
+    if context.config.layout.logging.write_by_default {
+        let _ = logger::log_to_file(&context.config, level, scope, &msg_final);
+    }
+
+    0 // Success
+}
+
+#[no_mangle]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers.
+/// * `ctx` must be a valid pointer to `HCoreContext`.
 /// * `src_dir` and `out_file` must be valid, null-terminated C strings.
 pub unsafe extern "C" fn hcore_pack(
     ctx: *mut HCoreContext,

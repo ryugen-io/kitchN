@@ -1,7 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ThemeConfig {
     pub meta: ThemeMeta,
     pub settings: ThemeSettings,
@@ -10,24 +10,24 @@ pub struct ThemeConfig {
     pub include: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ThemeMeta {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ThemeSettings {
     pub active_icons: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct IconsConfig {
     pub nerdfont: HashMap<String, String>,
     pub ascii: HashMap<String, String>,
     pub include: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LayoutConfig {
     pub tag: TagConfig,
     pub labels: HashMap<String, String>,
@@ -36,7 +36,7 @@ pub struct LayoutConfig {
     pub include: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TagConfig {
     pub prefix: String,
     pub suffix: String,
@@ -45,13 +45,13 @@ pub struct TagConfig {
     pub alignment: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct StructureConfig {
     pub terminal: String,
     pub file: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LoggingConfig {
     pub base_dir: String,
     pub path_structure: String,
@@ -60,20 +60,20 @@ pub struct LoggingConfig {
     pub write_by_default: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct DictionaryConfig {
     pub presets: HashMap<String, Preset>,
     pub include: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Preset {
     pub level: String,
     pub scope: Option<String>,
     pub msg: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct HyprConfig {
     pub theme: ThemeConfig,
     pub icons: IconsConfig,
@@ -99,10 +99,45 @@ pub enum ConfigError {
 impl HyprConfig {
     pub fn load() -> Result<Self, ConfigError> {
         let config_dir = Self::get_config_dir()?;
-        Self::load_from_dir(&config_dir)
+        // Use cache dir for binary config
+        let bin_path = if let Ok(cache_dir) = Self::get_cache_dir() {
+            cache_dir.join("config.bin")
+        } else {
+            // Fallback to data dir or config dir if cache not available (unlikely)
+            config_dir.join("config.bin") 
+        };
+        
+        Self::load_with_cache(&config_dir, &bin_path)
     }
 
     pub fn load_from_dir(config_dir: &Path) -> Result<Self, ConfigError> {
+        // For manual loading, we still check the standard cache location relative to project dirs if possible
+        // But if we only have a random dir, we might have to assume cache is there or skip it.
+        // For simplicity in CLI/testing, we'll ask for cache dir again.
+        
+        let bin_path = if let Ok(cache_dir) = Self::get_cache_dir() {
+            cache_dir.join("config.bin")
+        } else {
+             config_dir.join("config.bin")
+        };
+
+        Self::load_with_cache(config_dir, &bin_path)
+    }
+
+    pub fn load_with_cache(config_dir: &Path, bin_path: &Path) -> Result<Self, ConfigError> {
+        // Try loading from binary cache if it exists and is fresh
+        if bin_path.exists() && Self::is_cache_fresh(bin_path, config_dir)? && let Ok(file) = fs::File::open(bin_path) {
+            let mut reader = std::io::BufReader::new(file);
+             // Decode using bincode
+            match bincode::serde::decode_from_std_read::<HyprConfig, _, _>(&mut reader, bincode::config::standard()) {
+                Ok(cfg) => return Ok(cfg),
+                Err(_) => {
+                    // If decode fails, ignore and fall back to TOML
+                }
+            }
+        }
+
+        // Fallback: Load from TOML files
         let theme: ThemeConfig = Self::load_with_includes(&config_dir.join("theme.toml"))?;
         let icons: IconsConfig = Self::load_with_includes(&config_dir.join("icons.toml"))?;
         let layout: LayoutConfig = Self::load_with_includes(&config_dir.join("layout.toml"))?;
@@ -117,10 +152,52 @@ impl HyprConfig {
         })
     }
 
+    pub fn save_binary(&self, path: &Path) -> Result<(), ConfigError> {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(ConfigError::Io)?;
+        }
+        let file = fs::File::create(path).map_err(ConfigError::Io)?;
+        let mut writer = std::io::BufWriter::new(file);
+        
+        bincode::serde::encode_into_std_write(
+            self,
+            &mut writer,
+            bincode::config::standard()
+        ).map_err(|e| ConfigError::Io(std::io::Error::other(e)))?;
+        
+        Ok(())
+    }
+
+    fn is_cache_fresh(bin_path: &Path, config_dir: &Path) -> Result<bool, ConfigError> {
+        let bin_meta = fs::metadata(bin_path)?;
+        let bin_mtime = bin_meta.modified()?;
+
+        let toml_files = ["theme.toml", "icons.toml", "layout.toml", "dictionary.toml"];
+        for file in toml_files {
+            let path = config_dir.join(file);
+            if path.exists() {
+                let meta = fs::metadata(&path)?;
+                let mtime = meta.modified()?;
+                if mtime > bin_mtime {
+                    return Ok(false); // Source is newer
+                }
+            }
+        }
+        Ok(true)
+    }
+
     fn get_config_dir() -> Result<PathBuf, ConfigError> {
         // Use XDG_CONFIG_HOME/hyprcore or ~/.config/hyprcore
         if let Some(proj_dirs) = ProjectDirs::from("", "", "hyprcore") {
             return Ok(proj_dirs.config_dir().to_path_buf());
+        }
+        Err(ConfigError::ConfigDirNotFound)
+    }
+
+    fn get_cache_dir() -> Result<PathBuf, ConfigError> {
+        // Use XDG_CACHE_HOME/hyprcore or ~/.cache/hyprcore
+        if let Some(proj_dirs) = ProjectDirs::from("", "", "hyprcore") {
+            return Ok(proj_dirs.cache_dir().to_path_buf());
         }
         Err(ConfigError::ConfigDirNotFound)
     }
@@ -183,5 +260,71 @@ impl HyprConfig {
             }
             (t, s) => *t = s,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_binary_serialization() {
+        let dir = tempdir().unwrap();
+        let config_path = dir.path().join("config.bin");
+        
+        // Create a minimal config for testing
+        let config = HyprConfig {
+            theme: ThemeConfig {
+                meta: ThemeMeta { name: "test_theme".to_string() },
+                settings: ThemeSettings { active_icons: "nerdfont".to_string() },
+                colors: HashMap::new(),
+                fonts: HashMap::new(),
+                include: None,
+            },
+            icons: IconsConfig {
+                nerdfont: HashMap::new(),
+                ascii: HashMap::new(),
+                include: None,
+            },
+            layout: LayoutConfig {
+                tag: TagConfig {
+                    prefix: "[".to_string(),
+                    suffix: "]".to_string(),
+                    transform: "none".to_string(),
+                    min_width: 0,
+                    alignment: "left".to_string(),
+                },
+                labels: HashMap::new(),
+                structure: StructureConfig {
+                    terminal: "{msg}".to_string(),
+                    file: "{msg}".to_string(),
+                },
+                logging: LoggingConfig {
+                    base_dir: "logs".to_string(),
+                    path_structure: "sys.log".to_string(),
+                    filename_structure: "log".to_string(),
+                    timestamp_format: "%Y".to_string(),
+                    write_by_default: false,
+                },
+                include: None,
+            },
+            dictionary: DictionaryConfig {
+                presets: HashMap::new(),
+                include: None,
+            },
+        };
+
+        // Save
+        config.save_binary(&config_path).expect("Failed to save binary");
+        assert!(config_path.exists());
+
+        // Load (simulating cache hit)
+        // Since no TOMLs exist in tempdir, load_with_cache should use bin if fresh check passes (it checks for tomls existence too)
+        // In is_cache_fresh, valid if bin exists. If tomls don't exist, mtime check loop skips? 
+        // "if path.exists() ...". Yes.
+        
+        let loaded = HyprConfig::load_with_cache(dir.path(), &config_path).expect("Failed to load from cache");
+        assert_eq!(loaded.theme.meta.name, "test_theme");
     }
 }

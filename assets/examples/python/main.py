@@ -24,6 +24,9 @@ hcore.hcore_context_free.argtypes = [HCoreContext_p]
 hcore.hcore_log.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 hcore.hcore_log.restype = None
 
+hcore.hcore_log_preset.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p]
+hcore.hcore_log_preset.restype = ctypes.c_int
+
 hcore.hcore_pack.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p]
 hcore.hcore_pack.restype = ctypes.c_int
 
@@ -45,6 +48,10 @@ def main():
         # strings must be bytes in ctypes
         hcore.hcore_log(ctx, b"info", b"python_example", b"Hello from Python via FFI!")
         hcore.hcore_log(ctx, b"success", b"python_example", b"Bindings are working!")
+        
+        print("Testing Presets...")
+        hcore.hcore_log_preset(ctx, b"test_pass", None)
+        hcore.hcore_log_preset(ctx, b"info", b"Python preset override!")
 
         # 3. Error Handling Example
         print("\nAttempting to pack a non-existent directory...")
