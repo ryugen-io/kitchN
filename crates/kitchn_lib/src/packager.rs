@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use log::debug;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
@@ -7,6 +8,7 @@ use zip::{ZipArchive, ZipWriter};
 
 /// Pack all .ing files from a source directory into a .bag archive.
 pub fn pack(source_dir: &Path, output_file: &Path) -> Result<()> {
+    debug!("Packing {:?} into {:?}", source_dir, output_file);
     let file = File::create(output_file).context("Failed to create output file")?;
     let mut zip = ZipWriter::new(file);
     let options = SimpleFileOptions::default();
@@ -16,6 +18,7 @@ pub fn pack(source_dir: &Path, output_file: &Path) -> Result<()> {
         let path = entry.path();
         if path.extension().is_some_and(|ext| ext == "ing") {
             let filename = path.file_name().unwrap().to_string_lossy();
+            debug!("Adding file: {}", filename);
             zip.start_file(filename.as_ref(), options)?;
             let content = fs::read_to_string(&path)?;
             zip.write_all(content.as_bytes())?;
@@ -28,6 +31,7 @@ pub fn pack(source_dir: &Path, output_file: &Path) -> Result<()> {
 
 /// Unpack a .fpkg archive into the target directory.
 pub fn unpack(package_file: &Path, target_dir: &Path) -> Result<()> {
+    debug!("Unpacking {:?} to {:?}", package_file, target_dir);
     let file = File::open(package_file).context("Failed to open package file")?;
     let mut archive = ZipArchive::new(file)?;
 
@@ -36,6 +40,7 @@ pub fn unpack(package_file: &Path, target_dir: &Path) -> Result<()> {
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let outpath = target_dir.join(file.name());
+        debug!("Extracting file: {}", file.name());
 
         let mut content = Vec::new();
         file.read_to_end(&mut content)?;

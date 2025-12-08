@@ -3,6 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use tera::{Context as TeraContext, Tera};
+use log::debug;
 
 use crate::config::Cookbook;
 use crate::ingredient::Ingredient;
@@ -12,6 +13,7 @@ use std::collections::HashMap;
 use tera::{Value, to_value, try_get_value};
 
 pub fn apply(ingredient: &Ingredient, config: &Cookbook) -> Result<()> {
+    debug!("Applying ingredient: {}", ingredient.meta.name);
     let mut tera = Tera::default();
     tera.register_filter("hex_to_rgb", hex_to_rgb);
 
@@ -53,6 +55,7 @@ fn process_ingredient(
     ctx: &mut TeraContext,
     config: &Cookbook,
 ) -> Result<()> {
+    debug!("Processing ingredient templates and hooks for: {}", pkg.meta.name);
     // Render Templates
     for tpl in &pkg.templates {
         render_and_write(&tpl.target, &tpl.content, tera, ctx)?;
@@ -65,6 +68,7 @@ fn process_ingredient(
 
     // Run Hooks
     if let Some(cmd) = &pkg.hooks.reload {
+        debug!("Found reload hook: {}", cmd);
         // Retrieve presets or fall back to defaults
         let (run_lvl, run_scope, run_msg) = config.dictionary.presets.get("hook_run")
             .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
@@ -88,6 +92,7 @@ fn process_ingredient(
 
         if !output.stdout.is_empty() {
             let s = String::from_utf8_lossy(&output.stdout);
+            debug!("Hook stdout: {}", s.trim());
             for line in s.lines() {
                 // For output lines, we stick with 'info' or maybe reuse run_lvl? 
                 // Let's stick with 'info' to keep it distinct from the header buffer
@@ -97,6 +102,7 @@ fn process_ingredient(
 
         if !output.stderr.is_empty() {
             let s = String::from_utf8_lossy(&output.stderr);
+            debug!("Hook stderr: {}", s.trim());
             for line in s.lines() {
                 logger::log_to_terminal(config, "error", run_scope, line);
             }
@@ -113,6 +119,7 @@ fn process_ingredient(
 }
 
 fn render_and_write(target: &str, content: &str, tera: &mut Tera, ctx: &TeraContext) -> Result<()> {
+    debug!("Rendering target: {}", target);
     // Basic expansion of ~
     let target_expanded = if target.starts_with("~") {
         let home = directories::UserDirs::new()
@@ -124,6 +131,8 @@ fn render_and_write(target: &str, content: &str, tera: &mut Tera, ctx: &TeraCont
     } else {
         target.to_string()
     };
+    
+    debug!("Expanded target path: {}", target_expanded);
 
     let path = PathBuf::from(&target_expanded);
     if let Some(parent) = path.parent() {

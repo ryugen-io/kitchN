@@ -4,12 +4,14 @@ use directories::ProjectDirs;
 use kitchn_lib::config::Cookbook;
 use kitchn_lib::db::Pantry;
 use kitchn_lib::{ingredient::Ingredient, packager, processor};
+use log::{debug, warn};
+use simplelog::{Config, LevelFilter, WriteLogger};
 
-use std::fs;
+use std::fs::{self, File};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::env;
 
-/// Log via kitchn-log preset
 /// Log via kitchn-log preset
 fn log(preset: &str) {
     let _ = Command::new("kitchn-log")
@@ -34,9 +36,13 @@ fn log_msg(preset: &str, msg: &str) {
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    /// Enable debug mode with verbose logging in a separate terminal
+    #[arg(long, global = true)]
+    debug: bool,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     /// Stock .ing ingredients or .bag packages into the pantry
     Stock { path: PathBuf },
@@ -56,8 +62,58 @@ enum Commands {
     Bake,
 }
 
+fn init_debug_mode() -> Result<()> {
+    let log_path = env::temp_dir().join("kitchn-debug.log");
+    
+    // Create/Truncate log file
+    let file = File::create(&log_path).context("Failed to create debug log file")?;
+
+    // Initialize logger
+    WriteLogger::init(LevelFilter::Debug, Config::default(), file)
+        .context("Failed to initialize debug logger")?;
+
+    debug!("Debug mode initialized. Logging to {:?}", log_path);
+
+    // Detect terminal
+    let terminal = env::var("TERMINAL").ok().or_else(|| {
+        let terminals = ["alacritty", "kitty", "rio", "gnome-terminal", "xterm"];
+        for term in terminals {
+            if which::which(term).is_ok() {
+                return Some(term.to_string());
+            }
+        }
+        None
+    });
+
+    if let Some(term) = terminal {
+        debug!("Detected terminal: {}", term);
+        // Spawn terminal tailing the log
+        // Most terminals support -e to execute a command
+        // We use `tail -f` to follow the log
+        let _ = Command::new(&term)
+            .arg("-e")
+            .arg("tail")
+            .arg("-f")
+            .arg(&log_path)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .context("Failed to spawn debug terminal")?;
+    } else {
+        warn!("No supported terminal emulator found. Logs are writing to {:?}", log_path);
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    if cli.debug {
+        init_debug_mode()?;
+        debug!("Args parsed: {:?}", cli.command);
+    }
+
     let dirs = ProjectDirs::from("", "", "kitchn").context("Could not determine project dirs")?;
     let data_dir = dirs.data_dir(); // ~/.local/share/kitchn
     let db_path = data_dir.join("pantry.db");

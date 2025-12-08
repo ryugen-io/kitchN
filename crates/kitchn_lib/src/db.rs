@@ -1,5 +1,6 @@
 use crate::ingredient::Ingredient;
 use anyhow::{Context, Result};
+use log::debug;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter};
@@ -13,12 +14,13 @@ pub struct Pantry {
 
 impl Pantry {
     pub fn load(path: &Path) -> Result<Self> {
+        debug!("Loading pantry from {:?}", path);
         let mut db = Pantry {
             path: path.to_path_buf(),
             ingredients: HashMap::new(),
         };
 
-                if path.exists() {
+        if path.exists() {
             // Check if file is empty (e.g. newly created by NamedTempFile or touch)
             let len = fs::metadata(path).map(|m| m.len()).unwrap_or(0);
             if len > 0 {
@@ -32,12 +34,18 @@ impl Pantry {
                 ).context("Failed to decode pantry database")?;
                 
                 db.ingredients = data;
+                debug!("Loaded {} ingredients", db.ingredients.len());
+            } else {
+                debug!("Pantry file is empty");
             }
+        } else {
+            debug!("Pantry file does not exist, creating new");
         }
         Ok(db)
     }
 
     pub fn save(&self) -> Result<()> {
+        debug!("Saving pantry to {:?}", self.path);
         if let Some(parent) = self.path.parent() {
             fs::create_dir_all(parent)?;
         }
@@ -54,12 +62,14 @@ impl Pantry {
     }
 
     pub fn store(&mut self, ingredient: Ingredient) -> Result<()> {
+        debug!("Storing ingredient: {}", ingredient.meta.name);
         // Validation could happen here
         self.ingredients.insert(ingredient.meta.name.clone(), ingredient);
         Ok(())
     }
     
     pub fn discard(&mut self, name: &str) -> Option<Ingredient> {
+        debug!("Discarding ingredient: {}", name);
         self.ingredients.remove(name)
     }
 

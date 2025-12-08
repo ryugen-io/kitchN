@@ -1,12 +1,13 @@
 [package]
 name = "kitchn_lib"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 
 [lib]
 # crate-type removed to default to rlib
 
 [dependencies]
+log = "0.4"
 serde = { version = "1.0.216", features = ["derive"] }
 toml = "0.8.19"
 directories = "5.0.1"
