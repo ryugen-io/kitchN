@@ -60,6 +60,9 @@ enum Commands {
     Pantry,
     /// Bake cookbook into binary pastry for faster startup
     Bake,
+    /// Internal command to watch logs with colors (Hidden)
+    #[command(hide = true)]
+    InternalWatch { path: PathBuf },
 }
 
 fn get_log_path() -> PathBuf {
@@ -105,11 +108,14 @@ fn spawn_debug_viewer() -> Result<()> {
 
     if let Some(term) = terminal {
         debug!("Spawning debug viewer with: {}", term);
-        // Spawn terminal tailing the log
-         let _ = Command::new(&term)
-            .arg("-e")
-            .arg("tail")
-            .arg("-f")
+        
+        let self_exe = env::current_exe().context("Failed to get current executable path")?;
+        
+        // Spawn terminal running our internal watch command
+        let _ = Command::new(&term)
+            .arg("-e") // Most terminals support -e
+            .arg(&self_exe)
+            .arg("internal-watch")
             .arg(&log_path)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -128,8 +134,63 @@ fn spawn_debug_viewer() -> Result<()> {
     Ok(())
 }
 
+fn start_colored_watch(path: &Path) -> Result<()> {
+    use std::io::{BufRead, BufReader, Seek, SeekFrom};
+    use std::time::Duration;
+    use colored::Colorize;
+
+    println!("{}", "Kitchn Debug Watcher".bold().underline());
+    println!("Tailing: {:?}\n", path);
+
+    let mut file = File::open(path)?;
+    let mut pos = 0;
+
+    loop {
+        // Check if file has been truncated
+        if let Ok(metadata) = fs::metadata(path) {
+            if metadata.len() < pos {
+                pos = 0;
+                file = File::open(path)?;
+                println!("{}", "-- LOG TRUNCATED --".yellow());
+            }
+        }
+
+        file.seek(SeekFrom::Start(pos))?;
+        let mut reader = BufReader::new(&file);
+
+        let mut line = String::new();
+        while reader.read_line(&mut line)? > 0 {
+            // Apply colors based on level
+            let colored_line = if line.contains("ERROR") {
+                line.red()
+            } else if line.contains("WARN") {
+                line.yellow()
+            } else if line.contains("INFO") {
+                line.cyan()
+            } else if line.contains("DEBUG") {
+                line.blue()
+            } else {
+                line.normal()
+            };
+
+            print!("{}", colored_line);
+            
+            pos += line.len() as u64;
+            line.clear();
+        }
+
+        std::thread::sleep(Duration::from_millis(100));
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    
+    // Check if we are running the internal watcher BEFORE init logging to avoid lock contention or self-logging loops
+    if let Some(Commands::InternalWatch { path }) = &cli.command {
+        return start_colored_watch(path);
+    }
+
     let logging_enabled = init_logging(cli.debug)?;
 
     // Handle Standalone Debug Mode
@@ -191,6 +252,9 @@ fn process_command(cmd: Commands) -> Result<()> {
         }
         Commands::Bake => {
             bake_config(&dirs)?;
+        }
+        Commands::InternalWatch { .. } => {
+            // Handled in main
         }
     }
     Ok(())
