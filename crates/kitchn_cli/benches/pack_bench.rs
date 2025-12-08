@@ -6,7 +6,7 @@ use tempfile::tempdir;
 fn bench_pack(c: &mut Criterion) {
     let dir = tempdir().unwrap();
     let source_dir = dir.path().join("source");
-    let output_file = dir.path().join("bench.pantry");
+    let output_file = dir.path().join("bench.bag");
 
     fs::create_dir_all(&source_dir).unwrap();
     // Create 100 dummy fragments
@@ -26,7 +26,7 @@ fn bench_pack(c: &mut Criterion) {
 fn bench_unpack(c: &mut Criterion) {
     let dir = tempdir().unwrap();
     let source_dir = dir.path().join("source");
-    let output_file = dir.path().join("bench.pantry");
+    let output_file = dir.path().join("bench.bag");
     let unpack_dir = dir.path().join("unpacked");
 
     fs::create_dir_all(&source_dir).unwrap();

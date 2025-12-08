@@ -27,13 +27,14 @@ lint:
 run-log preset="test_pass":
     ./target/release/kitchn-log {{preset}}
 
-# Run kitchn sync
-sync:
-    ./target/release/kitchn sync
+# Run kitchn cook (sync)
+cook:
+    ./target/release/kitchn cook
 
-# Install example ingredient
-install-waybar:
-    ./target/release/kitchn install ./assets/ingredients/waybar.ing
+# Stock example ingredient
+stock-waybar:
+    ./target/release/kitchn stock ./assets/ingredients/waybar.ing
+
 
 
 # Uninstall everything

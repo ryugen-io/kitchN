@@ -4,67 +4,74 @@ import sys
 
 # Load the shared library
 # In a real scenario, this would be in /usr/lib or similar
-lib_path = os.path.abspath("../../../target/release/libhcore_ffi.so")
+lib_path = os.path.abspath("../../../target/release/libkitchn_ffi.so")
 try:
-    hcore = ctypes.CDLL(lib_path)
+    kitchn = ctypes.CDLL(lib_path)
 except OSError as e:
     print(f"Failed to load library at {lib_path}: {e}")
     sys.exit(1)
 
-# Define opaque pointer type for HCoreContext
-class HCoreContext(ctypes.Structure):
+# Define opaque pointer type for KitchnContext
+class KitchnContext(ctypes.Structure):
     pass
 
-HCoreContext_p = ctypes.POINTER(HCoreContext)
+KitchnContext_p = ctypes.POINTER(KitchnContext)
 
 # Define function signatures
-hcore.hcore_context_new.restype = HCoreContext_p
-hcore.hcore_context_free.argtypes = [HCoreContext_p]
+kitchn.kitchn_context_new.restype = KitchnContext_p
+kitchn.kitchn_context_free.argtypes = [KitchnContext_p]
 
-hcore.hcore_log.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
-hcore.hcore_log.restype = None
+# New: Set App Name
+kitchn.kitchn_context_set_app_name.argtypes = [KitchnContext_p, ctypes.c_char_p]
+kitchn.kitchn_context_set_app_name.restype = None
 
-hcore.hcore_log_preset.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p]
-hcore.hcore_log_preset.restype = ctypes.c_int
+kitchn.kitchn_log.argtypes = [KitchnContext_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+kitchn.kitchn_log.restype = None
 
-hcore.hcore_pack.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_char_p]
-hcore.hcore_pack.restype = ctypes.c_int
+kitchn.kitchn_log_preset.argtypes = [KitchnContext_p, ctypes.c_char_p, ctypes.c_char_p]
+kitchn.kitchn_log_preset.restype = ctypes.c_int
 
-hcore.hcore_get_last_error.argtypes = [HCoreContext_p, ctypes.c_char_p, ctypes.c_size_t]
-hcore.hcore_get_last_error.restype = ctypes.c_int
+kitchn.kitchn_pack.argtypes = [KitchnContext_p, ctypes.c_char_p, ctypes.c_char_p]
+kitchn.kitchn_pack.restype = ctypes.c_int
+
+kitchn.kitchn_get_last_error.argtypes = [KitchnContext_p, ctypes.c_char_p, ctypes.c_size_t]
+kitchn.kitchn_get_last_error.restype = ctypes.c_int
 
 def main():
-    print("Initializing Hyprcore Context (Python)...")
+    print("Initializing Kitchn Context (Python)...")
     
     # 1. Create Context
-    ctx = hcore.hcore_context_new()
+    ctx = kitchn.kitchn_context_new()
     if not ctx:
         print("Failed to create context!")
         sys.exit(1)
 
     try:
+        # Set App Name
+        kitchn.kitchn_context_set_app_name(ctx, b"PythonExample")
+
         # 2. Logging Example
         print("Sending logs from Python...")
         # strings must be bytes in ctypes
-        hcore.hcore_log(ctx, b"info", b"python_example", b"Hello from Python via FFI!")
-        hcore.hcore_log(ctx, b"success", b"python_example", b"Bindings are working!")
+        kitchn.kitchn_log(ctx, b"info", b"python_example", b"Hello from Python via FFI!")
+        kitchn.kitchn_log(ctx, b"success", b"python_example", b"Bindings are working!")
         
         print("Testing Presets...")
-        hcore.hcore_log_preset(ctx, b"test_pass", None)
-        hcore.hcore_log_preset(ctx, b"info", b"Python preset override!")
+        kitchn.kitchn_log_preset(ctx, b"test_pass", None)
+        kitchn.kitchn_log_preset(ctx, b"info", b"Python preset override!")
 
         # 3. Error Handling Example
         print("\nAttempting to pack a non-existent directory...")
-        result = hcore.hcore_pack(ctx, b"/path/to/nothing", b"output.fpkg")
+        result = kitchn.kitchn_pack(ctx, b"/path/to/nothing", b"output.pastry")
         
         if result != 0:
             error_buffer = ctypes.create_string_buffer(1024)
-            hcore.hcore_get_last_error(ctx, error_buffer, 1024)
+            kitchn.kitchn_get_last_error(ctx, error_buffer, 1024)
             print(f"Caught expected error: {error_buffer.value.decode('utf-8')}")
 
     finally:
         # 4. Cleanup
-        hcore.hcore_context_free(ctx)
+        kitchn.kitchn_context_free(ctx)
         print("\nContext freed. Exiting.")
 
 if __name__ == "__main__":

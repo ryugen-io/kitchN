@@ -27,8 +27,10 @@ terminal = "{tag} {scope} {icon} {msg}"
 file = "{timestamp} {tag} {msg}"
 
 [logging]
+[logging]
 base_dir = "~/.local/state/hyprcore/logs"
 path_structure = "{year}/{month}/{scope}"
 filename_structure = "{level}.{year}-{month}-{day}.log"
 timestamp_format = "%H:%M:%S"
 write_by_default = true
+app_name = "kitchn"

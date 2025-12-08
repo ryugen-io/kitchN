@@ -130,13 +130,21 @@ fn apply_style(text: &str, style: &str, config: &Cookbook) {
     }
 }
 
-pub fn log_to_file(config: &Cookbook, level: &str, scope: &str, msg: &str) -> Result<()> {
+pub fn log_to_file(
+    config: &Cookbook,
+    level: &str,
+    scope: &str,
+    msg: &str,
+    app_override: Option<&str>,
+) -> Result<()> {
     let clean_msg = strip_tags(msg);
     let now = Local::now();
     let tag = TagFactory::create_tag(config, level);
     let timestamp = now
         .format(&config.layout.logging.timestamp_format)
         .to_string();
+
+    let app_name = app_override.unwrap_or(&config.layout.logging.app_name);
 
     let mut content = config.layout.structure.file.clone();
     content = content.replace("{timestamp}", &timestamp);
@@ -160,12 +168,14 @@ pub fn log_to_file(config: &Cookbook, level: &str, scope: &str, msg: &str) -> Re
     rel_path = rel_path.replace("{year}", &year);
     rel_path = rel_path.replace("{month}", &month);
     rel_path = rel_path.replace("{scope}", scope);
+    rel_path = rel_path.replace("{app}", app_name);
 
     let mut filename = config.layout.logging.filename_structure.clone();
     filename = filename.replace("{level}", level);
     filename = filename.replace("{year}", &year);
     filename = filename.replace("{month}", &month);
     filename = filename.replace("{day}", &day);
+    filename = filename.replace("{app}", app_name);
 
     let full_dir = base_dir.join(rel_path);
     fs::create_dir_all(&full_dir)?;
@@ -201,4 +211,90 @@ fn strip_tags(msg: &str) -> String {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{
+        DictionaryConfig, IconsConfig, LayoutConfig, LoggingConfig, StructureConfig, TagConfig,
+        ThemeConfig, ThemeMeta, ThemeSettings,
+    };
+    use std::collections::HashMap;
+    use tempfile::tempdir;
+
+    fn create_mock_config() -> Cookbook {
+        Cookbook {
+            theme: ThemeConfig {
+                meta: ThemeMeta {
+                    name: "Test".to_string(),
+                },
+                settings: ThemeSettings {
+                    active_icons: "nerdfont".to_string(),
+                },
+                colors: HashMap::new(),
+                fonts: HashMap::new(),
+                include: None,
+            },
+            icons: IconsConfig {
+                nerdfont: HashMap::new(),
+                ascii: HashMap::new(),
+                include: None,
+            },
+            layout: LayoutConfig {
+                tag: TagConfig {
+                    prefix: "[".to_string(),
+                    suffix: "]".to_string(),
+                    transform: "uppercase".to_string(),
+                    min_width: 10,
+                    alignment: "center".to_string(),
+                },
+                labels: HashMap::new(),
+                structure: StructureConfig {
+                    terminal: "".to_string(),
+                    file: "{msg}".to_string(),
+                },
+                logging: LoggingConfig {
+                    base_dir: "".to_string(), // will be set 
+                    path_structure: "{app}/{scope}".to_string(),
+                    filename_structure: "log.txt".to_string(),
+                    timestamp_format: "%Y".to_string(),
+                    write_by_default: true,
+                    app_name: "default_app".to_string(),
+                },
+                include: None,
+            },
+            dictionary: DictionaryConfig {
+                presets: HashMap::new(),
+                include: None,
+            },
+        }
+    }
+
+    #[test]
+    fn test_log_to_file_default_app() {
+        let dir = tempdir().unwrap();
+        let mut config = create_mock_config();
+        config.layout.logging.base_dir = dir.path().to_str().unwrap().to_string();
+
+        log_to_file(&config, "info", "MAIN", "test message", None).unwrap();
+
+        let expected_path = dir.path().join("default_app/MAIN/log.txt");
+        assert!(expected_path.exists());
+        
+        let content = fs::read_to_string(expected_path).unwrap();
+        assert!(content.contains("test message"));
+    }
+
+    #[test]
+    fn test_log_to_file_app_override() {
+        let dir = tempdir().unwrap();
+        let mut config = create_mock_config();
+        config.layout.logging.base_dir = dir.path().to_str().unwrap().to_string();
+
+        log_to_file(&config, "info", "MAIN", "test message", Some("OverriddenApp")).unwrap();
+
+        let expected_path = dir.path().join("OverriddenApp/MAIN/log.txt");
+        assert!(expected_path.exists());
+    }
 }

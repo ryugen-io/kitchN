@@ -58,6 +58,12 @@ pub struct LoggingConfig {
     pub filename_structure: String,
     pub timestamp_format: String,
     pub write_by_default: bool,
+    #[serde(default = "default_app_name")]
+    pub app_name: String,
+}
+
+fn default_app_name() -> String {
+    "kitchn".to_string()
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -101,10 +107,10 @@ impl Cookbook {
         let config_dir = Self::get_config_dir()?;
         // Use cache dir for binary config
         let bin_path = if let Ok(cache_dir) = Self::get_cache_dir() {
-            cache_dir.join("recipe.bin")
+            cache_dir.join("pastry.bin")
         } else {
             // Fallback to data dir or config dir if cache not available (unlikely)
-            config_dir.join("recipe.bin") 
+            config_dir.join("pastry.bin") 
         };
         
         Self::load_with_cache(&config_dir, &bin_path)
@@ -116,9 +122,9 @@ impl Cookbook {
         // For simplicity in CLI/testing, we'll ask for cache dir again.
         
         let bin_path = if let Ok(cache_dir) = Self::get_cache_dir() {
-            cache_dir.join("recipe.bin")
+            cache_dir.join("pastry.bin")
         } else {
-             config_dir.join("recipe.bin")
+             config_dir.join("pastry.bin")
         };
 
         Self::load_with_cache(config_dir, &bin_path)
@@ -151,7 +157,7 @@ impl Cookbook {
         let mut dictionary: DictionaryConfig = toml::from_str(SYSTEM_DICTIONARY)
             .map_err(ConfigError::Toml)?;
 
-        let user_dict_path = config_dir.join("dictionary.toml");
+        let user_dict_path = config_dir.join("cookbook.toml");
         if user_dict_path.exists() {
             let user_dict: DictionaryConfig = Self::load_with_includes(&user_dict_path)?;
             // Merge user dict into system dict (user overrides system)
@@ -198,7 +204,16 @@ impl Cookbook {
         let bin_meta = fs::metadata(bin_path)?;
         let bin_mtime = bin_meta.modified()?;
 
-        let toml_files = ["theme.toml", "icons.toml", "layout.toml", "dictionary.toml"];
+        // Check if the running executable is newer than the cache
+        // This ensures that if we update the embedded defaults, the cache is invalidated
+        if let Ok(exe_path) = std::env::current_exe() 
+            && let Ok(exe_meta) = fs::metadata(&exe_path) 
+            && let Ok(exe_mtime) = exe_meta.modified() 
+            && exe_mtime > bin_mtime {
+                return Ok(false); // Executable is newer
+        }
+
+        let toml_files = ["theme.toml", "icons.toml", "layout.toml", "cookbook.toml"];
         for file in toml_files {
             let path = config_dir.join(file);
             if path.exists() {
@@ -297,7 +312,7 @@ mod tests {
     #[test]
     fn test_binary_serialization() {
         let dir = tempdir().unwrap();
-        let config_path = dir.path().join("recipe.bin");
+        let config_path = dir.path().join("pastry.bin");
         
         // Create a minimal config for testing
         let config = Cookbook {
@@ -332,6 +347,7 @@ mod tests {
                     filename_structure: "log".to_string(),
                     timestamp_format: "%Y".to_string(),
                     write_by_default: false,
+                    app_name: "test".to_string(),
                 },
                 include: None,
             },

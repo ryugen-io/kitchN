@@ -7,7 +7,7 @@ use tempfile::tempdir;
 fn test_cli_pack_and_install() {
     let dir = tempdir().unwrap();
     let source_dir = dir.path().join("source");
-    let output_file = dir.path().join("test.pantry");
+    let output_file = dir.path().join("test.bag");
 
     fs::create_dir_all(&source_dir).unwrap();
     fs::write(source_dir.join("test.ing"), r#"[package]
@@ -18,7 +18,7 @@ description = "Test ingredient"
 "#).unwrap();
 
     cargo_bin_cmd!("kitchn")
-        .arg("pack")
+        .arg("wrap")
         .arg(&source_dir)
         .arg("-o")
         .arg(&output_file)

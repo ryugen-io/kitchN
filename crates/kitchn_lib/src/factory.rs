@@ -119,6 +119,7 @@ mod tests {
                     filename_structure: "".to_string(),
                     timestamp_format: "".to_string(),
                     write_by_default: false,
+                    app_name: "test".to_string(),
                 },
                 include: None,
             },

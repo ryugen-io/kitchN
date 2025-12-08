@@ -35,10 +35,10 @@ readonly INFO_ICON=''
 # -----------------------------------------------------------------------------
 # Logging Functions
 # -----------------------------------------------------------------------------
-log()     { echo -e "${CYAN}[info]${NC} ${INFO_ICON}  $*"; }
-success() { echo -e "${GREEN}[ok]${NC}   ${CHECK}  $*"; }
-warn()    { echo -e "${YELLOW}[warn]${NC} ${WARN}  $*" >&2; }
-error()   { echo -e "${RED}[err]${NC}  ${ERR}  $*" >&2; }
+log()     { echo -e "${CYAN}[info]${NC} INSTALL  $*"; }
+success() { echo -e "${GREEN}[ok]${NC}   INSTALL  $*"; }
+warn()    { echo -e "${YELLOW}[warn]${NC} INSTALL  $*" >&2; }
+error()   { echo -e "${RED}[err]${NC}  INSTALL  $*" >&2; }
 die()     { error "$*"; exit 1; }
 
 # -----------------------------------------------------------------------------
@@ -106,6 +106,8 @@ success = "#50FA7B"
 error = "#FF5555"
 warn = "#F1FA8C"
 info = "#8BE9FD"
+kitchn = "#BD93F9"
+summary = "#50FA7B"
 black = "#44475A"
 red = "#DE312B"
 green = "#2FD651"
@@ -130,10 +132,12 @@ size_mono = "10"
 size_ui = "11"'
 
 ICONS_CONFIG='[nerdfont]
-success = ""
-error = ""
-warn = ""
-info = ""
+success = ""
+error = ""
+warn = ""
+info = ""
+kitchn = ""
+summary = ""
 net = "󰖩"
 
 [ascii]
@@ -141,6 +145,8 @@ success = "*"
 error = "!"
 warn = "!!"
 info = "i"
+kitchn = "K"
+summary = "="
 net = "#"'
 
 LAYOUT_CONFIG='[tag]
@@ -175,13 +181,16 @@ DICTIONARY_CONFIG='# User Dictionary Overrides
 # [presets.my_custom_hook]
 # level = "info"
 # msg = "hello world"
-''
+
+[presets]
+'
 
 # -----------------------------------------------------------------------------
 # Main Installation
 # -----------------------------------------------------------------------------
 main() {
-    log "Starting Kitchn installation"
+    # Manual scope change to match standard header
+    echo -e "${PURPLE}[kitchn]${NC} INSTALL  starting installation"
     
     # Verify we're in the right directory
     if [[ ! -f "${SCRIPT_DIR}/Cargo.toml" ]]; then
@@ -198,14 +207,14 @@ main() {
     write_config "${CONFIG_DIR}/theme.toml" "$THEME_CONFIG"
     write_config "${CONFIG_DIR}/icons.toml" "$ICONS_CONFIG"
     write_config "${CONFIG_DIR}/layout.toml" "$LAYOUT_CONFIG"
-    write_config "${CONFIG_DIR}/dictionary.toml" "$DICTIONARY_CONFIG"
+    write_config "${CONFIG_DIR}/cookbook.toml" "$DICTIONARY_CONFIG"
     
     # Build
     if ! command_exists cargo; then
         die "Cargo not found. Install Rust: https://rustup.rs"
     fi
     
-    log "Building release binaries"
+    log "building release binaries"
     if ! cargo build --release 2>&1; then
         die "Build failed"
     fi
@@ -223,7 +232,8 @@ main() {
         
         cp "$src" "$dst" || die "Failed to install: $bin"
     done
-    success "Installed binaries to $INSTALL_DIR"
+    # Manual scope change to match standard footer
+    echo -e "${GREEN}[summary]${NC} summary  installed successfully to $INSTALL_DIR"
     
     # PATH check
     if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then

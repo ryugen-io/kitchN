@@ -13,67 +13,67 @@ documentation_length = "full"
 
 # Header content with hardening macros
 header = """/**
- * @file hcore.h
- * @brief HyprCore FFI Interface - C bindings for the HyprCore library
+ * @file kitchn.h
+ * @brief Kitchn FFI Interface - C bindings for the Kitchn library
  * 
  * Provides a stable C-ABI interface for configuration management,
- * logging, packaging, and fragment processing.
+ * logging, packaging, and ingredient processing.
  * 
- * @see https://github.com/ryugen/hyprcore
+ * @see https://github.com/ryugen/kitchn
  */
 
-#ifndef HCORE_H
-#define HCORE_H
+#ifndef KITCHN_H
+#define KITCHN_H
 
 /* Compiler feature detection and hardening macros */
 #if defined(__GNUC__) || defined(__clang__)
-  #define HCORE_API __attribute__((visibility("default")))
-  #define HCORE_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-  #define HCORE_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
-  #define HCORE_DEPRECATED(msg) __attribute__((deprecated(msg)))
-  #define HCORE_PRINTF(fmt, args) __attribute__((format(printf, fmt, args)))
+  #define KITCHN_API __attribute__((visibility("default")))
+  #define KITCHN_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+  #define KITCHN_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
+  #define KITCHN_DEPRECATED(msg) __attribute__((deprecated(msg)))
+  #define KITCHN_PRINTF(fmt, args) __attribute__((format(printf, fmt, args)))
 #elif defined(_MSC_VER)
-  #define HCORE_API __declspec(dllexport)
-  #define HCORE_WARN_UNUSED_RESULT _Check_return_
-  #define HCORE_NONNULL(...)
-  #define HCORE_DEPRECATED(msg) __declspec(deprecated(msg))
-  #define HCORE_PRINTF(fmt, args)
+  #define KITCHN_API __declspec(dllexport)
+  #define KITCHN_WARN_UNUSED_RESULT _Check_return_
+  #define KITCHN_NONNULL(...)
+  #define KITCHN_DEPRECATED(msg) __declspec(deprecated(msg))
+  #define KITCHN_PRINTF(fmt, args)
 #else
-  #define HCORE_API
-  #define HCORE_WARN_UNUSED_RESULT
-  #define HCORE_NONNULL(...)
-  #define HCORE_DEPRECATED(msg)
-  #define HCORE_PRINTF(fmt, args)
+  #define KITCHN_API
+  #define KITCHN_WARN_UNUSED_RESULT
+  #define KITCHN_NONNULL(...)
+  #define KITCHN_DEPRECATED(msg)
+  #define KITCHN_PRINTF(fmt, args)
 #endif
 
 /* Thread safety annotations (Clang only) */
 #if defined(__clang__) && defined(__has_attribute)
   #if __has_attribute(capability)
-    #define HCORE_CAPABILITY(x) __attribute__((capability(x)))
-    #define HCORE_REQUIRES(...) __attribute__((requires_capability(__VA_ARGS__)))
-    #define HCORE_EXCLUDES(...) __attribute__((locks_excluded(__VA_ARGS__)))
+    #define KITCHN_CAPABILITY(x) __attribute__((capability(x)))
+    #define KITCHN_REQUIRES(...) __attribute__((requires_capability(__VA_ARGS__)))
+    #define KITCHN_EXCLUDES(...) __attribute__((locks_excluded(__VA_ARGS__)))
   #endif
 #endif
-#ifndef HCORE_CAPABILITY
-  #define HCORE_CAPABILITY(x)
-  #define HCORE_REQUIRES(...)
-  #define HCORE_EXCLUDES(...)
+#ifndef KITCHN_CAPABILITY
+  #define KITCHN_CAPABILITY(x)
+  #define KITCHN_REQUIRES(...)
+  #define KITCHN_EXCLUDES(...)
 #endif
 
 /* Null pointer check helper */
-#define HCORE_ASSERT_NOT_NULL(ptr) \\
+#define KITCHN_ASSERT_NOT_NULL(ptr) \\
     do { if (!(ptr)) { return; } } while(0)
-#define HCORE_ASSERT_NOT_NULL_RET(ptr, ret) \\
+#define KITCHN_ASSERT_NOT_NULL_RET(ptr, ret) \\
     do { if (!(ptr)) { return (ret); } } while(0)"""
 
 trailer = """
 /* ABI version for runtime compatibility checks */
-#define HCORE_ABI_VERSION_MAJOR 0
-#define HCORE_ABI_VERSION_MINOR 2
-#define HCORE_ABI_VERSION_PATCH 1
+#define KITCHN_ABI_VERSION_MAJOR 0
+#define KITCHN_ABI_VERSION_MINOR 1
+#define KITCHN_ABI_VERSION_PATCH 1
 
-/* End of hcore.h */
-#endif /* HCORE_H */"""
+/* End of kitchn.h */
+#endif /* KITCHN_H */"""
 
 # Formatting
 line_length = 100
@@ -83,7 +83,7 @@ style = "both"
 # Pointer configuration
 [ptr]
 # Use const for input parameters
-non_null_attribute = "HCORE_NONNULL"
+non_null_attribute = "KITCHN_NONNULL"
 
 [defines]
 # Define platform-specific macros if needed
@@ -116,7 +116,7 @@ rename_args = "None"
 args = "auto"
 sort_by = "None"
 # Mark functions returning pointers/ints that should be checked
-must_use = "HCORE_WARN_UNUSED_RESULT"
+must_use = "KITCHN_WARN_UNUSED_RESULT"
 
 [parse]
 parse_deps = false

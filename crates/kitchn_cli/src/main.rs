@@ -10,13 +10,23 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Log via kitchn-log preset
+/// Log via kitchn-log preset
 fn log(preset: &str) {
-    let _ = Command::new("kitchn-log").arg(preset).status();
+    let _ = Command::new("kitchn-log")
+        .arg("--app")
+        .arg("kitchn")
+        .arg(preset)
+        .status();
 }
 
 /// Log via kitchn-log preset with custom message
 fn log_msg(preset: &str, msg: &str) {
-    let _ = Command::new("kitchn-log").arg(preset).arg(msg).status();
+    let _ = Command::new("kitchn-log")
+        .arg("--app")
+        .arg("kitchn")
+        .arg(preset)
+        .arg(msg)
+        .status();
 }
 
 #[derive(Parser)]
@@ -28,21 +38,21 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Install a .ing ingredient or .pantry pantry package to the pantry
-    Install { path: PathBuf },
-    /// Pack .ing ingredients from a directory into a .pantry package
-    Pack {
+    /// Stock .ing ingredients or .bag packages into the pantry
+    Stock { path: PathBuf },
+    /// Wrap .ing ingredients from a directory into a .bag package
+    Wrap {
         /// Directory containing .ing files
         input: PathBuf,
-        /// Output .pantry file (optional, defaults to <dirname>.pantry)
+        /// Output .bag file (optional, defaults to <dirname>.bag)
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
-    /// Sync all ingredients from pantry
-    Sync,
-    /// List ingredients in pantry
-    List,
-    /// Bake cookbook into binary recipe for faster startup
+    /// Cook all ingredients from pantry into the system
+    Cook,
+    /// List stocked ingredients
+    Pantry,
+    /// Bake cookbook into binary pastry for faster startup
     Bake,
 }
 
@@ -54,31 +64,30 @@ fn main() -> Result<()> {
     let mut db = Pantry::load(&db_path)?;
 
     match cli.command {
-        Commands::Install { path } => {
-            let installed = install_to_pantry(&path, &mut db)?;
+        Commands::Stock { path } => {
+            let installed = stock_pantry(&path, &mut db)?;
             db.save()?;
-            log("install_ok");
             
-            // Apply only the newly installed ingredients
+            // Apply only the newly stocked ingredients
             let config = Cookbook::load().context("Failed to load Kitchn cookbook")?;
             for pkg in installed {
-                log_msg("sync_start", &format!("applying {}", pkg.meta.name));
+                log_msg("cook_start", &format!("simmering {}", pkg.meta.name));
                 processor::apply(&pkg, &config)?;
             }
         }
-        Commands::Pack { input, output } => {
+        Commands::Wrap { input, output } => {
             let out = output.unwrap_or_else(|| {
                 let name = input.file_name().unwrap_or_default().to_string_lossy();
-                PathBuf::from(format!("{}.pantry", name))
+                PathBuf::from(format!("{}.bag", name))
             });
             packager::pack(&input, &out)?;
-            log("pack_ok");
+            log_msg("wrap_ok", &format!("wrapped package to {}", out.display()));
         }
-        Commands::Sync => {
-            sync_db(&db)?;
+        Commands::Cook => {
+            cook_db(&db)?;
         }
-        Commands::List => {
-            list_db(&db);
+        Commands::Pantry => {
+            list_pantry(&db);
         }
         Commands::Bake => {
             bake_config(&dirs)?;
@@ -88,15 +97,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
+fn stock_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
     let mut installed_list = Vec::new();
 
     if !path.exists() {
         return Err(anyhow!("File not found: {:?}", path));
     }
 
-    // Check if it's a .pantry package
-    if path.extension().is_some_and(|ext| ext == "pantry") {
+    // Check if it's a .bag package
+    if path.extension().is_some_and(|ext| ext == "bag") {
         // Read zip
         let file = fs::File::open(path)?;
         let mut archive = zip::ZipArchive::new(file)?;
@@ -110,7 +119,7 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
                 let pkg: Ingredient = toml::from_str(&content)
                     .with_context(|| format!("Failed to parse ingredient inside zip: {}", file.name()))?;
                 
-                log_msg("install_ok", &format!("stocking {}", pkg.meta.name));
+                log_msg("stock_ok", &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version));
                 // We clone here because store takes ownership, but we want to return it too
                 // Or proper: store takes ownership. We can clone before storing.
                 let pkg_clone = pkg.clone();
@@ -124,7 +133,7 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
         let pkg: Ingredient = toml::from_str(&content)
             .with_context(|| format!("Failed to parse ingredient: {:?}", path))?;
             
-        log_msg("install_ok", &format!("stocking {}", pkg.meta.name));
+        log_msg("stock_ok", &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version));
         let pkg_clone = pkg.clone();
         db.store(pkg)?;
         installed_list.push(pkg_clone);
@@ -132,13 +141,13 @@ fn install_to_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
     Ok(installed_list)
 }
 
-fn list_db(db: &Pantry) {
+fn list_pantry(db: &Pantry) {
     use colored::*;
-    println!("{}", "\nInstalled Ingredients (Database):\n".bold().underline());
+    println!("{}", "\nStocked Ingredients (Pantry):\n".bold().underline());
 
     let fragments = db.list();
     if fragments.is_empty() {
-        log("list_empty");
+        log("pantry_empty");
         return;
     }
 
@@ -154,24 +163,24 @@ fn list_db(db: &Pantry) {
     }
 }
 
-fn sync_db(db: &Pantry) -> Result<()> {
-    log("sync_start");
-
+fn cook_db(db: &Pantry) -> Result<()> {
     // 1. Load Cookbook
     let config = Cookbook::load().context("Failed to load Kitchn cookbook")?;
 
     // 2. Process Ingredients
     let ingredients = db.list();
     if ingredients.is_empty() {
-        log("sync_empty");
+        log("cook_empty");
         return Ok(());
     }
 
+    let count = ingredients.len();
     for pkg in ingredients {
+         log_msg("cook_start", &format!("simmering <primary>{}</primary>", pkg.meta.name));
          processor::apply(pkg, &config)?;
     }
 
-    log("sync_ok");
+    log_msg("cook_ok", &format!("cooked {} ingredients successfully", count));
     Ok(())
 }
 
@@ -180,11 +189,22 @@ fn bake_config(dirs: &ProjectDirs) -> Result<()> {
     let config_dir = dirs.config_dir();
     let cache_dir = dirs.cache_dir();
     
+    log_msg("bake_scan", &config_dir.to_string_lossy());
+
+    // Verbose check for standard files to inform user
+    let files = ["theme.toml", "icons.toml", "layout.toml", "cookbook.toml"];
+    for f in files {
+        let p = config_dir.join(f);
+        if p.exists() {
+             log_msg("bake_file", f);
+        }
+    }
+
     // Force load from TOMLs by bypassing load() which might use stale cache
     // We use load_from_dir but strictly speaking load_from_dir will use cache if fresh.
     // We force refresh by deleting the bin first.
     
-    let bin_path = cache_dir.join("recipe.bin");
+    let bin_path = cache_dir.join("pastry.bin");
     if bin_path.exists() {
         let _ = fs::remove_file(&bin_path);
     } 
@@ -192,11 +212,12 @@ fn bake_config(dirs: &ProjectDirs) -> Result<()> {
     // Now load will definitely parse TOMLs
     match Cookbook::load_from_dir(config_dir) {
         Ok(config) => {
+            log_msg("bake_save", &bin_path.to_string_lossy());
             if let Err(e) = config.save_binary(&bin_path) {
                 log("bake_fail");
                 return Err(anyhow!("Failed to save binary config: {}", e));
             }
-            log("bake_ok");
+            log_msg("bake_ok", &format!("baked configuration to {}", bin_path.display()));
         }
         Err(e) => {
              log("bake_fail");

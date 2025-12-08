@@ -11,7 +11,7 @@ fn main() {
     output_file.pop(); // crates/
     output_file.pop(); // root
     output_file.push("include");
-    output_file.push("hcore.h");
+    output_file.push("kitchn.h");
 
     if let Some(parent) = output_file.parent() {
         std::fs::create_dir_all(parent).unwrap();

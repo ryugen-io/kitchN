@@ -5,7 +5,7 @@ use std::path::Path;
 use zip::write::SimpleFileOptions;
 use zip::{ZipArchive, ZipWriter};
 
-/// Pack all .ing files from a source directory into a .pantry archive.
+/// Pack all .ing files from a source directory into a .bag archive.
 pub fn pack(source_dir: &Path, output_file: &Path) -> Result<()> {
     let file = File::create(output_file).context("Failed to create output file")?;
     let mut zip = ZipWriter::new(file);
@@ -55,7 +55,7 @@ mod tests {
     fn test_pack_and_unpack() {
         let dir = tempdir().unwrap();
         let source_dir = dir.path().join("source");
-        let output_file = dir.path().join("test.pantry");
+        let output_file = dir.path().join("test.bag");
         let unpack_dir = dir.path().join("unpacked");
 
         fs::create_dir_all(&source_dir).unwrap();

@@ -11,6 +11,7 @@ use kitchn_lib::{logger, packager, processor, ingredient};
 pub struct KitchnContext {
     pub config: Cookbook,
     pub last_error: RefCell<Option<String>>,
+    pub app_name: RefCell<Option<String>>,
 }
 
 impl KitchnContext {
@@ -30,6 +31,7 @@ pub extern "C" fn kitchn_context_new() -> *mut KitchnContext {
             let ctx = Box::new(KitchnContext {
                 config: cfg,
                 last_error: RefCell::new(None),
+                app_name: RefCell::new(None),
             });
             Box::into_raw(ctx)
         }
@@ -95,6 +97,23 @@ pub unsafe extern "C" fn kitchn_get_last_error(
 ///
 /// This function is unsafe because it dereferences raw pointers.
 /// * `ctx` must be a valid pointer to `KitchnContext`.
+/// * `name` must be a valid, null-terminated C string.
+pub unsafe extern "C" fn kitchn_context_set_app_name(
+    ctx: *mut KitchnContext,
+    name: *const c_char,
+) {
+    if !ctx.is_null() && !name.is_null() {
+        let context = &*ctx;
+        let s = CStr::from_ptr(name).to_string_lossy();
+        *context.app_name.borrow_mut() = Some(s.into_owned());
+    }
+}
+
+#[no_mangle]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers.
+/// * `ctx` must be a valid pointer to `KitchnContext`.
 /// * `level`, `scope`, and `msg` must be valid, null-terminated C strings.
 pub unsafe extern "C" fn kitchn_log(
     ctx: *mut KitchnContext,
@@ -111,11 +130,12 @@ pub unsafe extern "C" fn kitchn_log(
         let level_str = CStr::from_ptr(level).to_string_lossy();
         let scope_str = CStr::from_ptr(scope).to_string_lossy();
         let msg_str = CStr::from_ptr(msg).to_string_lossy();
+        let app = context.app_name.borrow();
 
         logger::log_to_terminal(&context.config, &level_str, &scope_str, &msg_str);
 
         if context.config.layout.logging.write_by_default {
-            let _ = logger::log_to_file(&context.config, &level_str, &scope_str, &msg_str);
+            let _ = logger::log_to_file(&context.config, &level_str, &scope_str, &msg_str, app.as_deref());
         }
     }
 }
@@ -158,11 +178,13 @@ pub unsafe extern "C" fn kitchn_log_preset(
     } else {
         std::borrow::Cow::Borrowed(msg_default.as_str())
     };
+    
+    let app = context.app_name.borrow();
 
     logger::log_to_terminal(&context.config, level, scope, &msg_final);
 
     if context.config.layout.logging.write_by_default {
-        let _ = logger::log_to_file(&context.config, level, scope, &msg_final);
+        let _ = logger::log_to_file(&context.config, level, scope, &msg_final, app.as_deref());
     }
 
     0 // Success

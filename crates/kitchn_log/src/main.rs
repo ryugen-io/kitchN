@@ -12,6 +12,10 @@ struct Cli {
     /// Optional message override
     #[arg(trailing_var_arg = true)]
     msg: Option<Vec<String>>,
+
+    /// Optional app name override
+    #[arg(long)]
+    app: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -41,7 +45,7 @@ fn main() -> Result<()> {
     logger::log_to_terminal(&config, level, scope, msg);
 
     if config.layout.logging.write_by_default {
-        logger::log_to_file(&config, level, scope, msg)?;
+        logger::log_to_file(&config, level, scope, msg, cli.app.as_deref())?;
     }
 
     Ok(())

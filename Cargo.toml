@@ -6,6 +6,7 @@ members = [
     "crates/kitchn_lib",
     "crates/kitchn_log",
 ]
+exclude = ["assets/examples"]
 
 [profile.release]
 lto = true

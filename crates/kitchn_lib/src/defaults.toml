@@ -37,21 +37,83 @@ level = "success"
 scope = "INSTALL"
 msg = "installed successfully"
 
+# Actions
+# Actions
+[presets.install_start]
+level = "kitchn"
+scope = "INSTALL"
+msg = "starting installation"
+
+[presets.install_dirs]
+level = "info"
+scope = "INSTALL"
+msg = "creating directories"
+
+[presets.install_build]
+level = "info"
+scope = "INSTALL"
+msg = "building release binaries"
+
+[presets.stock_ok]
+level = "summary"
+scope = "STOCK"
+msg = "stocked in pantry"
+
+[presets.cook_start]
+level = "kitchn"
+scope = "COOK"
+msg = "starting to cook"
+
+[presets.cook_ok]
+level = "summary"
+scope = "COOK"
+msg = "cooking complete"
+
+[presets.cook_empty]
+level = "warn"
+scope = "COOK"
+msg = "pantry empty"
+
+[presets.pantry_empty]
+level = "info"
+scope = "PANTRY"
+msg = "pantry is empty"
+
+[presets.wrap_ok]
+level = "summary"
+scope = "WRAP"
+msg = "wrapped for storage"
+
 # Bake
 [presets.bake_start]
-level = "info"
+level = "kitchn"
 scope = "BAKE"
-msg = "baking recipe"
+msg = "starting to bake"
 
 [presets.bake_ok]
-level = "success"
+level = "summary"
 scope = "BAKE"
 msg = "recipe baked"
 
 [presets.bake_fail]
-level = "error"
+level = "summary"
 scope = "BAKE"
 msg = "baking failed"
+
+[presets.bake_scan]
+level = "info"
+scope = "BAKE"
+msg = "scanning"
+
+[presets.bake_file]
+level = "info"
+scope = "BAKE"
+msg = "reading"
+
+[presets.bake_save]
+level = "info"
+scope = "BAKE"
+msg = "saving to"
 
 # Stats
 [presets.stats_analyzing]

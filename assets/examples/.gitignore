@@ -1,0 +1,8 @@
+target/
+cpp/main
+**/*.o
+**/*.so
+**/*.dylib
+**/*.dll
+__pycache__/
+*.pastry
