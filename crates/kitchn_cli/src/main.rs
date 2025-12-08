@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::env;
 
+mod watcher;
+
 /// Log via kitchn-log preset
 fn log(preset: &str) {
     let _ = Command::new("kitchn-log")
@@ -160,19 +162,7 @@ fn start_colored_watch(path: &Path) -> Result<()> {
 
         let mut line = String::new();
         while reader.read_line(&mut line)? > 0 {
-            // Apply colors based on level
-            let colored_line = if line.contains("ERROR") {
-                line.red()
-            } else if line.contains("WARN") {
-                line.yellow()
-            } else if line.contains("INFO") {
-                line.cyan()
-            } else if line.contains("DEBUG") {
-                line.blue()
-            } else {
-                line.normal()
-            };
-
+            let colored_line = watcher::colorize_line(&line);
             print!("{}", colored_line);
             
             pos += line.len() as u64;
