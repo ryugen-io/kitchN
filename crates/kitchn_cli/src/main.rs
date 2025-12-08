@@ -35,7 +35,7 @@ fn log_msg(preset: &str, msg: &str) {
 #[command(name = "kitchn", version, about = "Kitchn Ingredient Manager")]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 
     /// Enable debug mode with verbose logging in a separate terminal
     #[arg(long, global = true)]
@@ -62,17 +62,35 @@ enum Commands {
     Bake,
 }
 
-fn init_debug_mode() -> Result<()> {
-    let log_path = env::temp_dir().join("kitchn-debug.log");
-    
-    // Create/Truncate log file
-    let file = File::create(&log_path).context("Failed to create debug log file")?;
+fn get_log_path() -> PathBuf {
+    env::temp_dir().join("kitchn-debug.log")
+}
 
-    // Initialize logger
-    WriteLogger::init(LevelFilter::Debug, Config::default(), file)
-        .context("Failed to initialize debug logger")?;
+fn init_logging(force_enable: bool) -> Result<bool> {
+    let log_path = get_log_path();
+    let should_log = force_enable || log_path.exists();
 
-    debug!("Debug mode initialized. Logging to {:?}", log_path);
+    if should_log {
+        // Create file if it doesn't exist, open for append if it does
+        let file = fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+            .context("Failed to open debug log file")?;
+
+        // Initialize logger
+        let _ = WriteLogger::init(LevelFilter::Debug, Config::default(), file);
+        debug!("Logging initialized to {:?}", log_path);
+    }
+    Ok(should_log)
+}
+
+fn spawn_debug_viewer() -> Result<()> {
+    let log_path = get_log_path();
+
+    // Reset log file for fresh run if we are spawning the viewer explicitly
+    // This gives a clean state for "Starting debug mode"
+    File::create(&log_path).context("Failed to reset log file")?;
 
     // Detect terminal
     let terminal = env::var("TERMINAL").ok().or_else(|| {
@@ -86,11 +104,9 @@ fn init_debug_mode() -> Result<()> {
     });
 
     if let Some(term) = terminal {
-        debug!("Detected terminal: {}", term);
+        debug!("Spawning debug viewer with: {}", term);
         // Spawn terminal tailing the log
-        // Most terminals support -e to execute a command
-        // We use `tail -f` to follow the log
-        let _ = Command::new(&term)
+         let _ = Command::new(&term)
             .arg("-e")
             .arg("tail")
             .arg("-f")
@@ -99,8 +115,14 @@ fn init_debug_mode() -> Result<()> {
             .stderr(Stdio::null())
             .spawn()
             .context("Failed to spawn debug terminal")?;
+            
+        println!("Debug Mode Started.");
+        println!("Verbose logs are streaming to the new terminal window.");
+        println!("Run 'kitchn' commands normally, and they will appear there.");
     } else {
-        warn!("No supported terminal emulator found. Logs are writing to {:?}", log_path);
+        warn!("No supported terminal emulator found.");
+        println!("Logs are being written to: {:?}", log_path);
+        println!("You can tail them manually: tail -f {:?}", log_path);
     }
 
     Ok(())
@@ -108,18 +130,40 @@ fn init_debug_mode() -> Result<()> {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    let logging_enabled = init_logging(cli.debug)?;
 
-    if cli.debug {
-        init_debug_mode()?;
-        debug!("Args parsed: {:?}", cli.command);
+    // Handle Standalone Debug Mode
+    match cli.command {
+        None => {
+            if cli.debug {
+                // kitchn --debug
+                spawn_debug_viewer()?;
+            } else {
+                // kitchn (no args) -> Print Help
+                use clap::CommandFactory;
+                Cli::command().print_help()?;
+            }
+            return Ok(());
+        }
+        Some(cmd) => {
+            if logging_enabled {
+                 debug!("Executing command: {:?}", cmd);
+            }
+            // Proceed to execute command
+            process_command(cmd)?;
+        }
     }
 
+    Ok(())
+}
+
+fn process_command(cmd: Commands) -> Result<()> {
     let dirs = ProjectDirs::from("", "", "kitchn").context("Could not determine project dirs")?;
     let data_dir = dirs.data_dir(); // ~/.local/share/kitchn
     let db_path = data_dir.join("pantry.db");
     let mut db = Pantry::load(&db_path)?;
 
-    match cli.command {
+    match cmd {
         Commands::Stock { path } => {
             let installed = stock_pantry(&path, &mut db)?;
             db.save()?;
@@ -149,7 +193,6 @@ fn main() -> Result<()> {
             bake_config(&dirs)?;
         }
     }
-
     Ok(())
 }
 
