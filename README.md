@@ -1,13 +1,18 @@
 # Kitchn
 ![Kitchn Header](assets/images/header.svg)
 
-
 **Strict Corporate Design Enforcement for your System.**
 
 > "Single Source of Truth". One config change propagates to Shells, Scripts, Logs, GUIs, and TUI apps instantly.
 > Now with C-API support for C++, Python, and more.
 
-![Stack](https://img.shields.io/badge/Stack-Rust_2024-8be9fd?style=flat-square&logo=rust&logoColor=white&labelColor=282a36) ![Interface](https://img.shields.io/badge/Interface-FFI_%2F_C--ABI-ff79c6?style=flat-square&logo=c&logoColor=white&labelColor=282a36) ![Storage](https://img.shields.io/badge/Storage-FragmentsDB-ffb86c?style=flat-square&logo=sqlite&logoColor=white&labelColor=282a36) ![Engine](https://img.shields.io/badge/Engine-Tera-bd93f9?style=flat-square&logo=html5&logoColor=white&labelColor=282a36) ![License](https://img.shields.io/badge/License-MIT-50fa7b?style=flat-square&logo=open-source-initiative&logoColor=white&labelColor=282a36)
+<p align="center">
+  <img src="https://img.shields.io/badge/🦀_Rust-2024-8be9fd?style=flat-square&labelColor=282a36" alt="Rust 2024">
+  <img src="https://img.shields.io/badge/🍳_Recipe-Tera_Templates-bd93f9?style=flat-square&labelColor=282a36" alt="Tera Templates">
+  <img src="https://img.shields.io/badge/🥧_Pastry-Binary_Cache-ffb86c?style=flat-square&labelColor=282a36" alt="PastryDB">
+  <img src="https://img.shields.io/badge/🔌_FFI-C--ABI-ff79c6?style=flat-square&labelColor=282a36" alt="C-ABI">
+  <img src="https://img.shields.io/badge/📜_License-MIT-50fa7b?style=flat-square&labelColor=282a36" alt="MIT License">
+</p>
 
 ---
 
