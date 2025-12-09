@@ -14,6 +14,7 @@
 
 ## Debug Mode (v0.2.0+)
 - **Flag**: `--debug` (Global flag).
-- **Standalone**: Running `kitchn --debug` opens a terminal window that tails the debug log.
-- **Persistent**: Running `kitchn --debug <cmd>` or just `kitchn <cmd>` (while listener is running) logs verbose debug info to `/tmp/kitchn-debug.log`.
-- **Automatic Detection**: It tries to detect your preferred terminal emulator (via `TERMINAL` env var) or falls back to standard ones (alacritty, kitty, etc.).
+- **Behavior**: Always spawns a dedicated terminal window (prioritizing `rio`, then `alacritty`, `kitty`) to stream verbose debug logs.
+- **Verbose Hook Logging**: Logs exact commands, execution time, exit codes, and full stdout/stderr (even if empty) for every hook.
+- **Config Debugging**: Logs detailed file loading paths and Tera context keys.
+- **Persistent**: Logs are written to `/tmp/kitchn-debug.log`.

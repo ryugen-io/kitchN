@@ -10,8 +10,17 @@
     - Example: `log_msg("cook_start", "simmering ...")`
 - This ensures that even if `kitchn` logic changes, the visual output remains consistent with the Hyprcore brand.
 
+## Cook Summary
+- `kitchn cook` reports a concise summary.
+- If hooks fail, the summary explicitly states: `cooked X ingredients successfully but Y hooks failed`.
+
 ## Verbose/Debug Logging (Internal)
 - Separated from the visual `kitchn_log`.
 - Uses Rust's standard `log` facade.
 - Directed to `/tmp/kitchn-debug.log`.
-- Intended for developers/debugging, NOT for general user consumption.
+- Displayed in a **separate terminal window** spawned by `kitchn --debug`.
+- Content-based coloring:
+    - **ERROR/FAIL**: Red & Bold
+    - **WARN**: Yellow
+    - **INFO/SUCCESS/STDOUT**: Green/Cyan
+    - **DEBUG**: Dimmed Blue
