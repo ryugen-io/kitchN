@@ -26,7 +26,7 @@ int main() {
 
   // 3. Error Handling Example (simulated failure)
   std::cout << "\nAttempting to pack a non-existent directory..." << std::endl;
-  int result = kitchn_pack(ctx, "/path/to/nothing", "output.pastry");
+  int result = kitchn_pack(ctx, "/path/to/nothing", "output.bag");
 
   if (result != 0) {
     // Retrieve the error message from Rust

@@ -29,7 +29,7 @@ pub fn pack(source_dir: &Path, output_file: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Unpack a .fpkg archive into the target directory.
+/// Unpack a .bag archive into the target directory.
 pub fn unpack(package_file: &Path, target_dir: &Path) -> Result<()> {
     debug!("Unpacking {:?} to {:?}", package_file, target_dir);
     let file = File::open(package_file).context("Failed to open package file")?;

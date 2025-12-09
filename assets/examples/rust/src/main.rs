@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
     // 3. Library Usage Example
     // We can use generic paths directly
     let src = Path::new("non_existent_dir");
-    let dest = Path::new("output.pastry");
+    let dest = Path::new("output.bag");
 
     println!("\nAttempting to pack (safe Rust API)...");
     if let Err(e) = kitchn_lib::packager::pack(src, dest) {

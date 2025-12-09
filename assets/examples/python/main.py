@@ -62,7 +62,7 @@ def main():
 
         # 3. Error Handling Example
         print("\nAttempting to pack a non-existent directory...")
-        result = kitchn.kitchn_pack(ctx, b"/path/to/nothing", b"output.pastry")
+        result = kitchn.kitchn_pack(ctx, b"/path/to/nothing", b"output.bag")
         
         if result != 0:
             error_buffer = ctypes.create_string_buffer(1024)
