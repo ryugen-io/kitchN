@@ -168,6 +168,16 @@ kitchn bake --debug
 
 ---
 
+## 🛡️ Robustness
+
+Kitchn enforces a **Single Instance Policy** using OS-level file locking (`flock`). This ensures that only one instance manages the pantry or system configuration at a time, preventing database corruption and conflicts.
+
+-   **Automatic Cleanup**: If Kitchn crashes, the kernel releases the lock immediately.
+-   **Non-Blocking**: A second instance will fail immediately with a clear error message instead of hanging.
+-   **Debug Exception**: The debug viewer (`kitchn --debug`) is exempt and can run in parallel.
+
+---
+
 ##  Ingredients (`.ing`)
 
 An **Ingredient** is a single TOML file that teaches Kitchn how to theme a specific application. Ingredients are **ingested** into the `PastryDB` upon installation, meaning you don't need to keep the original files.
