@@ -59,12 +59,21 @@ enum Commands {
     /// Cook all ingredients from pantry into the system
     Cook,
     /// List stocked ingredients
-    Pantry,
+    Pantry {
+        #[command(subcommand)]
+        command: Option<PantryCommands>,
+    },
     /// Bake cookbook into binary pastry for faster startup
     Bake,
     /// Internal command to watch logs with colors (Hidden)
     #[command(hide = true)]
     InternalWatch { path: PathBuf },
+}
+
+#[derive(Subcommand, Debug)]
+enum PantryCommands {
+    /// Remove all ingredients from the pantry
+    Clean,
 }
 
 fn get_log_path() -> PathBuf {
@@ -181,6 +190,20 @@ fn main() -> Result<()> {
         return start_colored_watch(path);
     }
 
+    // Acquire global lock (except for InternalWatch which is passive)
+    let _lock_file = if let Some(Commands::InternalWatch { .. }) = &cli.command {
+        None
+    } else {
+        match acquire_lock() {
+            Ok(f) => Some(f),
+            Err(e) => {
+                warn!("Failed to acquire global lock: {}", e);
+                eprintln!("Error: Another instance of kitchn is already running.");
+                return Ok(());
+            }
+        }
+    };
+
     let logging_enabled = init_logging(cli.debug)?;
 
     // ALWAYS spawn debug viewer if debug flag is set
@@ -194,16 +217,6 @@ fn main() -> Result<()> {
     match cli.command {
         None => {
             // If debug was set, we spawned the viewer. If not set, print help.
-            // If debug IS set, we just started the viewer and have nothing else to do, so we exit.
-            // But wait, if I run `kitchn --debug`, I expect it to KEEP running?
-            // `spawn_debug_viewer` spawns a DETACHED process (or separate process).
-            // If main exits, does the terminal close?
-            // "The child process is not killed when the Child handle is dropped."
-            // BUT if the new terminal is executing a command that finishes...
-            // `spawn_debug_viewer` runs `kitchn internal-watch`.
-            // `internal-watch` runs a loop.
-            // So the terminal should stay open.
-
             if !cli.debug {
                 use clap::CommandFactory;
                 Cli::command().print_help()?;
@@ -220,6 +233,42 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn acquire_lock() -> Result<File> {
+    use std::os::unix::io::AsRawFd;
+
+    let runtime_dir = directories::BaseDirs::new()
+        .and_then(|d| d.runtime_dir().map(|p| p.to_path_buf()))
+        .unwrap_or_else(env::temp_dir);
+
+    // Ensure dir exists
+    if !runtime_dir.exists() {
+        let _ = fs::create_dir_all(&runtime_dir);
+    }
+
+    let lock_path = runtime_dir.join("kitchn.lock");
+    let file = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&lock_path)
+        .context("Failed to open lock file")?;
+
+    let fd = file.as_raw_fd();
+    let ret = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
+
+    if ret != 0 {
+        let err = std::io::Error::last_os_error();
+        // EWOULDBLOCK (11) means locked by another process
+        return Err(anyhow::anyhow!(
+            "Could not acquire lock (another instance running?): {}",
+            err
+        ));
+    }
+
+    // Lock is held as long as `file` is open (until drop)
+    Ok(file)
 }
 
 fn process_command(cmd: Commands) -> Result<()> {
@@ -251,9 +300,21 @@ fn process_command(cmd: Commands) -> Result<()> {
         Commands::Cook => {
             cook_db(&db)?;
         }
-        Commands::Pantry => {
-            list_pantry(&db);
-        }
+        Commands::Pantry { command } => match command {
+            Some(PantryCommands::Clean) => {
+                let count = db.list().len();
+                if count == 0 {
+                    log_msg("pantry_empty", "pantry is already empty");
+                } else {
+                    db.clean();
+                    db.save()?;
+                    log_msg("pantry_clean_ok", &format!("removed {} ingredients", count));
+                }
+            }
+            None => {
+                list_pantry(&db);
+            }
+        },
         Commands::Bake => {
             bake_config(&dirs)?;
         }

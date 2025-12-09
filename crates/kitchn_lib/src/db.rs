@@ -74,6 +74,14 @@ impl Pantry {
         self.ingredients.remove(name)
     }
 
+    pub fn clean(&mut self) {
+        debug!("Cleaning pantry (removing all ingredients)");
+        for name in self.ingredients.keys() {
+            debug!("Discarding ingredient: {}", name);
+        }
+        self.ingredients.clear();
+    }
+
     pub fn list(&self) -> Vec<&Ingredient> {
         let mut list: Vec<&Ingredient> = self.ingredients.values().collect();
         list.sort_by_key(|f| &f.meta.name);

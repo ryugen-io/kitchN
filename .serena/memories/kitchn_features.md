@@ -10,6 +10,7 @@
 - `wrap`: Packages a directory of ingredients into a portable `.bag`.
 - `cook`: Applies all ingredients from the pantry to the system. This executes the hooks and renders templates.
 - `pantry`: Lists all stocked ingredients.
+- `pantry clean`: Removes ALL ingredients from the pantry.
 - `bake`: Pre-compiles configuration files (theme, layout, icons) into a binary format for faster subsequent runs.
 
 ## Debug Mode (v0.2.0+)

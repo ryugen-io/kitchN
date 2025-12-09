@@ -79,6 +79,11 @@ level = "info"
 scope = "PANTRY"
 msg = "pantry is empty"
 
+[presets.pantry_clean_ok]
+level = "summary"
+scope = "PANTRY"
+msg = "cleaned pantry"
+
 [presets.wrap_ok]
 level = "summary"
 scope = "WRAP"

@@ -870,6 +870,7 @@ dependencies = [
  "criterion",
  "directories",
  "kitchn_lib",
+ "libc",
  "log",
  "predicates",
  "serde",
