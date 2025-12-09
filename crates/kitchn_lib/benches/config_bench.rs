@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use kitchn_lib::config::Cookbook;
 use std::fs;
 use tempfile::tempdir;
@@ -7,8 +7,10 @@ fn benchmark_config_load(c: &mut Criterion) {
     // Setup a dummy config directory
     let dir = tempdir().unwrap();
     let config_dir = dir.path();
-    
-    fs::write(config_dir.join("theme.toml"), r##"
+
+    fs::write(
+        config_dir.join("theme.toml"),
+        r##"
     [meta]
     name = "bench_theme"
     [settings]
@@ -19,14 +21,22 @@ fn benchmark_config_load(c: &mut Criterion) {
     primary = "#ff79c6"
     [fonts]
     ui = "Sans"
-    "##).unwrap();
-    
-    fs::write(config_dir.join("icons.toml"), r##"
+    "##,
+    )
+    .unwrap();
+
+    fs::write(
+        config_dir.join("icons.toml"),
+        r##"
     [nerdfont]
     [ascii]
-    "##).unwrap();
+    "##,
+    )
+    .unwrap();
 
-    fs::write(config_dir.join("layout.toml"), r##"
+    fs::write(
+        config_dir.join("layout.toml"),
+        r##"
     [tag]
     prefix = "["
     suffix = "]"
@@ -44,7 +54,9 @@ fn benchmark_config_load(c: &mut Criterion) {
     timestamp_format = "%Y"
     write_by_default = false
     app_name = "benchmark"
-    "##).unwrap();
+    "##,
+    )
+    .unwrap();
 
     c.bench_function("config_load_from_dir", |b| {
         b.iter(|| {
@@ -59,9 +71,11 @@ fn benchmark_config_serialization(c: &mut Criterion) {
     let dir = tempdir().unwrap();
     let config_dir = dir.path();
     fs::create_dir_all(config_dir).unwrap();
-    
+
     // Mock files to make it valid
-    fs::write(config_dir.join("theme.toml"), r##"
+    fs::write(
+        config_dir.join("theme.toml"),
+        r##"
     [meta]
     name = "bench_theme"
     [settings]
@@ -72,14 +86,22 @@ fn benchmark_config_serialization(c: &mut Criterion) {
     primary = "#ff79c6"
     [fonts]
     ui = "Sans"
-    "##).unwrap();
-    
-    fs::write(config_dir.join("icons.toml"), r##"
+    "##,
+    )
+    .unwrap();
+
+    fs::write(
+        config_dir.join("icons.toml"),
+        r##"
     [nerdfont]
     [ascii]
-    "##).unwrap();
+    "##,
+    )
+    .unwrap();
 
-    fs::write(config_dir.join("layout.toml"), r##"
+    fs::write(
+        config_dir.join("layout.toml"),
+        r##"
     [tag]
     prefix = "["
     suffix = "]"
@@ -97,15 +119,21 @@ fn benchmark_config_serialization(c: &mut Criterion) {
     timestamp_format = "%Y"
     write_by_default = false
     app_name = "benchmark"
-    "##).unwrap();
-    fs::write(config_dir.join("cookbook.toml"), r#"
+    "##,
+    )
+    .unwrap();
+    fs::write(
+        config_dir.join("cookbook.toml"),
+        r#"
     [meta]
     version = "1.0"
     authors = ["bench"]
-    "#).unwrap();
+    "#,
+    )
+    .unwrap();
 
     let config = Cookbook::load_from_dir(config_dir).expect("Failed to create dummy config");
-    
+
     let bin_path = dir.path().join("bench.bin");
 
     c.bench_function("config_save_binary", |b| {
@@ -115,5 +143,9 @@ fn benchmark_config_serialization(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, benchmark_config_load, benchmark_config_serialization);
+criterion_group!(
+    benches,
+    benchmark_config_load,
+    benchmark_config_serialization
+);
 criterion_main!(benches);

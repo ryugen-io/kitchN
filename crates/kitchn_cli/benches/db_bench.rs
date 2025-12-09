@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion, BatchSize};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use kitchn_lib::db::Pantry;
 use kitchn_lib::ingredient::{Ingredient, IngredientManifest};
 use tempfile::NamedTempFile;

@@ -10,7 +10,7 @@ use colored::{ColoredString, Colorize};
 /// - Other -> Normal
 pub fn colorize_line(line: &str) -> ColoredString {
     let lower = line.to_lowercase();
-    
+
     // Check content first for more specific coloring
     if lower.contains("error") || lower.contains("fail") || lower.contains("stderr") {
         line.red().bold()
@@ -20,7 +20,7 @@ pub fn colorize_line(line: &str) -> ColoredString {
         // "stdout" in debug logs usually means we are printing output, which is good info
         line.green()
     } else if lower.contains("info") {
-         line.cyan()
+        line.cyan()
     } else if line.contains("DEBUG") || line.contains("[DEBUG]") {
         // Fallback for generic debug messages
         line.blue().dimmed()

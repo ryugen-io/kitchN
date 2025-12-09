@@ -77,7 +77,7 @@ impl ColorResolver {
 mod tests {
     use super::*;
     use crate::config::{
-        DictionaryConfig, Cookbook, IconsConfig, LayoutConfig, LoggingConfig, StructureConfig,
+        Cookbook, DictionaryConfig, IconsConfig, LayoutConfig, LoggingConfig, StructureConfig,
         TagConfig, ThemeConfig, ThemeMeta, ThemeSettings,
     };
     use std::collections::HashMap;

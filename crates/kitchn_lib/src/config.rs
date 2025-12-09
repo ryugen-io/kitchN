@@ -1,6 +1,6 @@
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use log::debug;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ThemeConfig {
@@ -111,9 +111,9 @@ impl Cookbook {
             cache_dir.join("pastry.bin")
         } else {
             // Fallback to data dir or config dir if cache not available (unlikely)
-            config_dir.join("pastry.bin") 
+            config_dir.join("pastry.bin")
         };
-        
+
         Self::load_with_cache(&config_dir, &bin_path)
     }
 
@@ -121,11 +121,11 @@ impl Cookbook {
         // For manual loading, we still check the standard cache location relative to project dirs if possible
         // But if we only have a random dir, we might have to assume cache is there or skip it.
         // For simplicity in CLI/testing, we'll ask for cache dir again.
-        
+
         let bin_path = if let Ok(cache_dir) = Self::get_cache_dir() {
             cache_dir.join("pastry.bin")
         } else {
-             config_dir.join("pastry.bin")
+            config_dir.join("pastry.bin")
         };
 
         Self::load_with_cache(config_dir, &bin_path)
@@ -133,53 +133,61 @@ impl Cookbook {
 
     pub fn load_with_cache(config_dir: &Path, bin_path: &Path) -> Result<Self, ConfigError> {
         // Try loading from binary cache if it exists and is fresh
-        if bin_path.exists() && Self::is_cache_fresh(bin_path, config_dir)? && let Ok(file) = fs::File::open(bin_path) {
+        if bin_path.exists()
+            && Self::is_cache_fresh(bin_path, config_dir)?
+            && let Ok(file) = fs::File::open(bin_path)
+        {
             let mut reader = std::io::BufReader::new(file);
-             // Decode using bincode
-            match bincode::serde::decode_from_std_read::<Cookbook, _, _>(&mut reader, bincode::config::standard()) {
+            // Decode using bincode
+            match bincode::serde::decode_from_std_read::<Cookbook, _, _>(
+                &mut reader,
+                bincode::config::standard(),
+            ) {
                 Ok(cfg) => {
                     debug!("Loaded configuration from binary cache: {:?}", bin_path);
                     return Ok(cfg);
-                },
+                }
                 Err(e) => {
-                    debug!("Failed to decode binary cache (falling back to TOML): {}", e);
+                    debug!(
+                        "Failed to decode binary cache (falling back to TOML): {}",
+                        e
+                    );
                 }
             }
         } else {
             debug!("Binary cache miss or stale (loading from TOMLs)");
         }
 
-
         // Fallback: Load from TOML files
         // Fallback: Load from TOML files
         let theme: ThemeConfig = Self::load_with_includes(&config_dir.join("theme.toml"))?;
         let icons: IconsConfig = Self::load_with_includes(&config_dir.join("icons.toml"))?;
         let layout: LayoutConfig = Self::load_with_includes(&config_dir.join("layout.toml"))?;
-        
+
         // Load System Dictionary (Embedded)
         // This ensures defaults are always available without external files
         const SYSTEM_DICTIONARY: &str = include_str!("defaults.toml");
-        
+
         // Parse embedded defaults
-        let mut dictionary: DictionaryConfig = toml::from_str(SYSTEM_DICTIONARY)
-            .map_err(ConfigError::Toml)?;
+        let mut dictionary: DictionaryConfig =
+            toml::from_str(SYSTEM_DICTIONARY).map_err(ConfigError::Toml)?;
 
         let user_dict_path = config_dir.join("cookbook.toml");
         if user_dict_path.exists() {
             let user_dict: DictionaryConfig = Self::load_with_includes(&user_dict_path)?;
             // Merge user dict into system dict (user overrides system)
             for (curr_k, curr_v) in user_dict.presets {
-                 dictionary.presets.insert(curr_k, curr_v);
+                dictionary.presets.insert(curr_k, curr_v);
             }
             // Merge includes if present
             if let Some(user_inc) = user_dict.include {
-                 dictionary.include = match dictionary.include {
-                     Some(mut sys_inc) => {
-                         sys_inc.extend(user_inc);
-                         Some(sys_inc)
-                     }
-                     None => Some(user_inc)
-                 };
+                dictionary.include = match dictionary.include {
+                    Some(mut sys_inc) => {
+                        sys_inc.extend(user_inc);
+                        Some(sys_inc)
+                    }
+                    None => Some(user_inc),
+                };
             }
         }
 
@@ -197,13 +205,10 @@ impl Cookbook {
         }
         let file = fs::File::create(path).map_err(ConfigError::Io)?;
         let mut writer = std::io::BufWriter::new(file);
-        
-        bincode::serde::encode_into_std_write(
-            self,
-            &mut writer,
-            bincode::config::standard()
-        ).map_err(|e| ConfigError::Io(std::io::Error::other(e)))?;
-        
+
+        bincode::serde::encode_into_std_write(self, &mut writer, bincode::config::standard())
+            .map_err(|e| ConfigError::Io(std::io::Error::other(e)))?;
+
         Ok(())
     }
 
@@ -213,11 +218,12 @@ impl Cookbook {
 
         // Check if the running executable is newer than the cache
         // This ensures that if we update the embedded defaults, the cache is invalidated
-        if let Ok(exe_path) = std::env::current_exe() 
-            && let Ok(exe_meta) = fs::metadata(&exe_path) 
-            && let Ok(exe_mtime) = exe_meta.modified() 
-            && exe_mtime > bin_mtime {
-                return Ok(false); // Executable is newer
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Ok(exe_meta) = fs::metadata(&exe_path)
+            && let Ok(exe_mtime) = exe_meta.modified()
+            && exe_mtime > bin_mtime
+        {
+            return Ok(false); // Executable is newer
         }
 
         let toml_files = ["theme.toml", "icons.toml", "layout.toml", "cookbook.toml"];
@@ -321,12 +327,16 @@ mod tests {
     fn test_binary_serialization() {
         let dir = tempdir().unwrap();
         let config_path = dir.path().join("pastry.bin");
-        
+
         // Create a minimal config for testing
         let config = Cookbook {
             theme: ThemeConfig {
-                meta: ThemeMeta { name: "test_theme".to_string() },
-                settings: ThemeSettings { active_icons: "nerdfont".to_string() },
+                meta: ThemeMeta {
+                    name: "test_theme".to_string(),
+                },
+                settings: ThemeSettings {
+                    active_icons: "nerdfont".to_string(),
+                },
                 colors: HashMap::new(),
                 fonts: HashMap::new(),
                 include: None,
@@ -366,15 +376,18 @@ mod tests {
         };
 
         // Save
-        config.save_binary(&config_path).expect("Failed to save binary");
+        config
+            .save_binary(&config_path)
+            .expect("Failed to save binary");
         assert!(config_path.exists());
 
         // Load (simulating cache hit)
         // Since no TOMLs exist in tempdir, load_with_cache should use bin if fresh check passes (it checks for tomls existence too)
-        // In is_cache_fresh, valid if bin exists. If tomls don't exist, mtime check loop skips? 
+        // In is_cache_fresh, valid if bin exists. If tomls don't exist, mtime check loop skips?
         // "if path.exists() ...". Yes.
-        
-        let loaded = Cookbook::load_with_cache(dir.path(), &config_path).expect("Failed to load from cache");
+
+        let loaded =
+            Cookbook::load_with_cache(dir.path(), &config_path).expect("Failed to load from cache");
         assert_eq!(loaded.theme.meta.name, "test_theme");
     }
 }

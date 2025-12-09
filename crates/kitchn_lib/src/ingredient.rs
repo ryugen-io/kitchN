@@ -20,7 +20,7 @@ pub struct IngredientManifest {
     pub description: String,
     pub repository: Option<String>,
     pub license: Option<String>,
-    
+
     // Legacy support (optional, but deprecated)
     pub id: Option<String>,
 }

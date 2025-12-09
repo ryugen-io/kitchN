@@ -5,7 +5,7 @@ use std::path::Path;
 use std::ptr;
 
 use kitchn_lib::config::Cookbook;
-use kitchn_lib::{logger, packager, processor, ingredient};
+use kitchn_lib::{ingredient, logger, packager, processor};
 
 /// Opaque context pointer (wraps Cookbook with error storage)
 pub struct KitchnContext {
@@ -98,10 +98,7 @@ pub unsafe extern "C" fn kitchn_get_last_error(
 /// This function is unsafe because it dereferences raw pointers.
 /// * `ctx` must be a valid pointer to `KitchnContext`.
 /// * `name` must be a valid, null-terminated C string.
-pub unsafe extern "C" fn kitchn_context_set_app_name(
-    ctx: *mut KitchnContext,
-    name: *const c_char,
-) {
+pub unsafe extern "C" fn kitchn_context_set_app_name(ctx: *mut KitchnContext, name: *const c_char) {
     if !ctx.is_null() && !name.is_null() {
         let context = &*ctx;
         let s = CStr::from_ptr(name).to_string_lossy();
@@ -135,7 +132,13 @@ pub unsafe extern "C" fn kitchn_log(
         logger::log_to_terminal(&context.config, &level_str, &scope_str, &msg_str);
 
         if context.config.layout.logging.write_by_default {
-            let _ = logger::log_to_file(&context.config, &level_str, &scope_str, &msg_str, app.as_deref());
+            let _ = logger::log_to_file(
+                &context.config,
+                &level_str,
+                &scope_str,
+                &msg_str,
+                app.as_deref(),
+            );
         }
     }
 }
@@ -171,14 +174,14 @@ pub unsafe extern "C" fn kitchn_log_preset(
 
     let level = &preset.level;
     let scope = preset.scope.as_deref().unwrap_or("");
-    
+
     let msg_default = &preset.msg;
     let msg_final = if !msg_override.is_null() {
         unsafe { CStr::from_ptr(msg_override).to_string_lossy() }
     } else {
         std::borrow::Cow::Borrowed(msg_default.as_str())
     };
-    
+
     let app = context.app_name.borrow();
 
     logger::log_to_terminal(&context.config, level, scope, &msg_final);
@@ -266,23 +269,23 @@ pub unsafe extern "C" fn kitchn_store(ctx: *mut KitchnContext, path: *const c_ch
     context.clear_error();
 
     let p = unsafe { CStr::from_ptr(path).to_string_lossy() };
-        match std::fs::read_to_string(Path::new(&*p)) {
-            Ok(content) => match toml::from_str::<ingredient::Ingredient>(&content) {
-                Ok(pkg) => match processor::apply(&pkg, &context.config) {
-                    Ok(_) => 0,
-                    Err(e) => {
-                        context.set_error(format!("Apply error: {:#}", e));
-                        1
-                    }
-                },
+    match std::fs::read_to_string(Path::new(&*p)) {
+        Ok(content) => match toml::from_str::<ingredient::Ingredient>(&content) {
+            Ok(pkg) => match processor::apply(&pkg, &context.config) {
+                Ok(_) => 0,
                 Err(e) => {
-                     context.set_error(format!("Parse error: {:#}", e));
-                     1
+                    context.set_error(format!("Apply error: {:#}", e));
+                    1
                 }
             },
             Err(e) => {
-                context.set_error(format!("File read error: {:#}", e));
+                context.set_error(format!("Parse error: {:#}", e));
                 1
             }
+        },
+        Err(e) => {
+            context.set_error(format!("File read error: {:#}", e));
+            1
         }
+    }
 }

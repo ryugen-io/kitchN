@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use directories::ProjectDirs;
 use kitchn_lib::config::Cookbook;
@@ -7,10 +7,10 @@ use kitchn_lib::{ingredient::Ingredient, packager, processor};
 use log::{debug, warn};
 use simplelog::{Config, LevelFilter, WriteLogger};
 
+use std::env;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::env;
 
 mod watcher;
 
@@ -110,9 +110,9 @@ fn spawn_debug_viewer() -> Result<()> {
 
     if let Some(term) = terminal {
         debug!("Spawning debug viewer with: {}", term);
-        
+
         let self_exe = env::current_exe().context("Failed to get current executable path")?;
-        
+
         // Spawn terminal running our internal watch command
         let _ = Command::new(&term)
             .arg("-e") // Most terminals support -e
@@ -123,7 +123,7 @@ fn spawn_debug_viewer() -> Result<()> {
             .stderr(Stdio::null())
             .spawn()
             .context("Failed to spawn debug terminal")?;
-            
+
         println!("Debug Mode Started.");
         println!("Verbose logs are streaming to the new terminal window.");
         println!("Run 'kitchn' commands normally, and they will appear there.");
@@ -137,9 +137,9 @@ fn spawn_debug_viewer() -> Result<()> {
 }
 
 fn start_colored_watch(path: &Path) -> Result<()> {
+    use colored::Colorize;
     use std::io::{BufRead, BufReader, Seek, SeekFrom};
     use std::time::Duration;
-    use colored::Colorize;
 
     println!("{}", "Kitchn Debug Watcher".bold().underline());
     println!("Tailing: {:?}\n", path);
@@ -164,7 +164,7 @@ fn start_colored_watch(path: &Path) -> Result<()> {
         while reader.read_line(&mut line)? > 0 {
             let colored_line = watcher::colorize_line(&line);
             print!("{}", colored_line);
-            
+
             pos += line.len() as u64;
             line.clear();
         }
@@ -175,7 +175,7 @@ fn start_colored_watch(path: &Path) -> Result<()> {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     // Check if we are running the internal watcher BEFORE init logging to avoid lock contention or self-logging loops
     if let Some(Commands::InternalWatch { path }) = &cli.command {
         return start_colored_watch(path);
@@ -203,16 +203,16 @@ fn main() -> Result<()> {
             // `spawn_debug_viewer` runs `kitchn internal-watch`.
             // `internal-watch` runs a loop.
             // So the terminal should stay open.
-            
+
             if !cli.debug {
-                 use clap::CommandFactory;
-                 Cli::command().print_help()?;
+                use clap::CommandFactory;
+                Cli::command().print_help()?;
             }
             return Ok(());
         }
         Some(cmd) => {
             if logging_enabled {
-                 debug!("Executing command: {:?}", cmd);
+                debug!("Executing command: {:?}", cmd);
             }
             // Proceed to execute command
             process_command(cmd)?;
@@ -232,7 +232,7 @@ fn process_command(cmd: Commands) -> Result<()> {
         Commands::Stock { path } => {
             let installed = stock_pantry(&path, &mut db)?;
             db.save()?;
-            
+
             // Apply only the newly stocked ingredients
             let config = Cookbook::load().context("Failed to load Kitchn cookbook")?;
             for pkg in installed {
@@ -282,11 +282,15 @@ fn stock_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
             if file.name().ends_with(".ing") {
                 let mut content = String::new();
                 std::io::Read::read_to_string(&mut file, &mut content)?;
-                
-                let pkg: Ingredient = toml::from_str(&content)
-                    .with_context(|| format!("Failed to parse ingredient inside zip: {}", file.name()))?;
-                
-                log_msg("stock_ok", &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version));
+
+                let pkg: Ingredient = toml::from_str(&content).with_context(|| {
+                    format!("Failed to parse ingredient inside zip: {}", file.name())
+                })?;
+
+                log_msg(
+                    "stock_ok",
+                    &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version),
+                );
                 // We clone here because store takes ownership, but we want to return it too
                 // Or proper: store takes ownership. We can clone before storing.
                 let pkg_clone = pkg.clone();
@@ -299,8 +303,11 @@ fn stock_pantry(path: &Path, db: &mut Pantry) -> Result<Vec<Ingredient>> {
         let content = fs::read_to_string(path)?;
         let pkg: Ingredient = toml::from_str(&content)
             .with_context(|| format!("Failed to parse ingredient: {:?}", path))?;
-            
-        log_msg("stock_ok", &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version));
+
+        log_msg(
+            "stock_ok",
+            &format!("stocked {} v{}", pkg.meta.name, pkg.meta.version),
+        );
         let pkg_clone = pkg.clone();
         db.store(pkg)?;
         installed_list.push(pkg_clone);
@@ -345,18 +352,30 @@ fn cook_db(db: &Pantry) -> Result<()> {
     let mut hook_failures = 0;
 
     for pkg in ingredients {
-         log_msg("cook_start", &format!("simmering <primary>{}</primary>", pkg.meta.name));
-         if !processor::apply(pkg, &config)? {
-             hook_failures += 1;
-         }
+        log_msg(
+            "cook_start",
+            &format!("simmering <primary>{}</primary>", pkg.meta.name),
+        );
+        if !processor::apply(pkg, &config)? {
+            hook_failures += 1;
+        }
     }
 
     if hook_failures > 0 {
-        log_msg("cook_ok", &format!("cooked {} ingredients successfully but {} hooks failed", count, hook_failures));
+        log_msg(
+            "cook_ok",
+            &format!(
+                "cooked {} ingredients successfully but {} hooks failed",
+                count, hook_failures
+            ),
+        );
     } else {
-        log_msg("cook_ok", &format!("cooked {} ingredients successfully", count));
+        log_msg(
+            "cook_ok",
+            &format!("cooked {} ingredients successfully", count),
+        );
     }
-    
+
     Ok(())
 }
 
@@ -364,7 +383,7 @@ fn bake_config(dirs: &ProjectDirs) -> Result<()> {
     log("bake_start");
     let config_dir = dirs.config_dir();
     let cache_dir = dirs.cache_dir();
-    
+
     log_msg("bake_scan", &config_dir.to_string_lossy());
 
     // Verbose check for standard files to inform user
@@ -372,18 +391,18 @@ fn bake_config(dirs: &ProjectDirs) -> Result<()> {
     for f in files {
         let p = config_dir.join(f);
         if p.exists() {
-             log_msg("bake_file", f);
+            log_msg("bake_file", f);
         }
     }
 
     // Force load from TOMLs by bypassing load() which might use stale cache
     // We use load_from_dir but strictly speaking load_from_dir will use cache if fresh.
     // We force refresh by deleting the bin first.
-    
+
     let bin_path = cache_dir.join("pastry.bin");
     if bin_path.exists() {
         let _ = fs::remove_file(&bin_path);
-    } 
+    }
 
     // Now load will definitely parse TOMLs
     match Cookbook::load_from_dir(config_dir) {
@@ -393,13 +412,16 @@ fn bake_config(dirs: &ProjectDirs) -> Result<()> {
                 log("bake_fail");
                 return Err(anyhow!("Failed to save binary config: {}", e));
             }
-            log_msg("bake_ok", &format!("baked configuration to {}", bin_path.display()));
+            log_msg(
+                "bake_ok",
+                &format!("baked configuration to {}", bin_path.display()),
+            );
         }
         Err(e) => {
-             log("bake_fail");
-             return Err(anyhow!("Failed to load configuration: {}", e));
+            log("bake_fail");
+            return Err(anyhow!("Failed to load configuration: {}", e));
         }
     }
-    
+
     Ok(())
 }

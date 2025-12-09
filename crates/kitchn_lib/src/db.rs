@@ -26,13 +26,12 @@ impl Pantry {
             if len > 0 {
                 let file = File::open(path).context("Failed to open pantry database")?;
                 let mut reader = BufReader::new(file);
-                
+
                 // Using bincode 2.0 serde integration
-                let data: HashMap<String, Ingredient> = bincode::serde::decode_from_std_read(
-                    &mut reader, 
-                    bincode::config::standard()
-                ).context("Failed to decode pantry database")?;
-                
+                let data: HashMap<String, Ingredient> =
+                    bincode::serde::decode_from_std_read(&mut reader, bincode::config::standard())
+                        .context("Failed to decode pantry database")?;
+
                 db.ingredients = data;
                 debug!("Loaded {} ingredients", db.ingredients.len());
             } else {
@@ -51,23 +50,25 @@ impl Pantry {
         }
         let file = File::create(&self.path).context("Failed to create pantry database file")?;
         let mut writer = BufWriter::new(file);
-        
+
         bincode::serde::encode_into_std_write(
             &self.ingredients,
             &mut writer,
-            bincode::config::standard()
-        ).context("Failed to encode pantry database")?;
-        
+            bincode::config::standard(),
+        )
+        .context("Failed to encode pantry database")?;
+
         Ok(())
     }
 
     pub fn store(&mut self, ingredient: Ingredient) -> Result<()> {
         debug!("Storing ingredient: {}", ingredient.meta.name);
         // Validation could happen here
-        self.ingredients.insert(ingredient.meta.name.clone(), ingredient);
+        self.ingredients
+            .insert(ingredient.meta.name.clone(), ingredient);
         Ok(())
     }
-    
+
     pub fn discard(&mut self, name: &str) -> Option<Ingredient> {
         debug!("Discarding ingredient: {}", name);
         self.ingredients.remove(name)
@@ -78,7 +79,7 @@ impl Pantry {
         list.sort_by_key(|f| &f.meta.name);
         list
     }
-    
+
     pub fn iter(&self) -> std::collections::hash_map::Values<'_, String, Ingredient> {
         self.ingredients.values()
     }

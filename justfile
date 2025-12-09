@@ -12,7 +12,7 @@ install:
 
 # Run tests
 test:
-    cargo test
+    cargo test --workspace
 
 # Clean build artifacts
 clean:
@@ -57,6 +57,14 @@ audit:
 bench:
     cargo bench
     ../utils/kitchn/bench.sh
+
+# Run benchmarks for kitchn_lib only
+bench-lib:
+    cargo bench -p kitchn_lib
+
+# Run tests for kitchn_lib only
+test-lib:
+    cargo test -p kitchn_lib
 
 # Run C++ FFI Example
 example-cpp: build

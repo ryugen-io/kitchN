@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
+use log::debug;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use tera::{Context as TeraContext, Tera};
-use log::debug;
 
 use crate::config::Cookbook;
 use crate::ingredient::Ingredient;
@@ -32,8 +32,11 @@ pub fn apply(ingredient: &Ingredient, config: &Cookbook) -> Result<bool> {
 
     // Debug log available context keys
     if log::log_enabled!(log::Level::Debug) {
-         // Context implements Debug, so we can just print it
-         debug!("Tera Context available for '{}': {:#?}", ingredient.meta.name, ctx);
+        // Context implements Debug, so we can just print it
+        debug!(
+            "Tera Context available for '{}': {:#?}",
+            ingredient.meta.name, ctx
+        );
     }
 
     process_ingredient(ingredient, &mut tera, &mut ctx, config)
@@ -61,7 +64,10 @@ fn process_ingredient(
     ctx: &mut TeraContext,
     config: &Cookbook,
 ) -> Result<bool> {
-    debug!("Processing ingredient templates and hooks for: {}", pkg.meta.name);
+    debug!(
+        "Processing ingredient templates and hooks for: {}",
+        pkg.meta.name
+    );
     // Render Templates
     for tpl in &pkg.templates {
         render_and_write(&tpl.target, &tpl.content, tera, ctx)?;
@@ -77,18 +83,45 @@ fn process_ingredient(
     // Run Hooks
     if let Some(cmd) = &pkg.hooks.reload {
         debug!("Found reload hook requested: '{}'", cmd);
-        
+
         // Retrieve presets or fall back to defaults
-        let (run_lvl, run_scope, run_msg) = config.dictionary.presets.get("hook_run")
-            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+        let (run_lvl, run_scope, run_msg) = config
+            .dictionary
+            .presets
+            .get("hook_run")
+            .map(|p| {
+                (
+                    p.level.as_str(),
+                    p.scope.as_deref().unwrap_or("HOOK"),
+                    p.msg.as_str(),
+                )
+            })
             .unwrap_or(("secondary", "HOOK", "running hooks"));
 
-        let (ok_lvl, ok_scope, ok_msg) = config.dictionary.presets.get("hook_ok")
-            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+        let (ok_lvl, ok_scope, ok_msg) = config
+            .dictionary
+            .presets
+            .get("hook_ok")
+            .map(|p| {
+                (
+                    p.level.as_str(),
+                    p.scope.as_deref().unwrap_or("HOOK"),
+                    p.msg.as_str(),
+                )
+            })
             .unwrap_or(("success", "HOOK", "hooks executed"));
-            
-        let (err_lvl, err_scope, err_msg) = config.dictionary.presets.get("hook_fail")
-            .map(|p| (p.level.as_str(), p.scope.as_deref().unwrap_or("HOOK"), p.msg.as_str()))
+
+        let (err_lvl, err_scope, err_msg) = config
+            .dictionary
+            .presets
+            .get("hook_fail")
+            .map(|p| {
+                (
+                    p.level.as_str(),
+                    p.scope.as_deref().unwrap_or("HOOK"),
+                    p.msg.as_str(),
+                )
+            })
             .unwrap_or(("error", "HOOK", "hooks failed"));
 
         logger::log_to_terminal(config, run_lvl, run_scope, run_msg);
@@ -96,15 +129,18 @@ fn process_ingredient(
         // Execute Hook
         debug!("Executing hook via 'sh -c': {}", cmd);
         let start = std::time::Instant::now();
-        
+
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd)
             .output()
             .context("Failed to execute hook")?;
-            
+
         let duration = start.elapsed();
-        debug!("Hook completed in {:?} with exit code: {}", duration, output.status);
+        debug!(
+            "Hook completed in {:?} with exit code: {}",
+            duration, output.status
+        );
 
         // Always log stdout/stderr to debug log
         if !output.stdout.is_empty() {
@@ -115,7 +151,7 @@ fn process_ingredient(
                 logger::log_to_terminal(config, "info", run_scope, line);
             }
         } else {
-             debug!("Hook stdout: <empty>");
+            debug!("Hook stdout: <empty>");
         }
 
         if !output.stderr.is_empty() {
@@ -126,7 +162,7 @@ fn process_ingredient(
                 logger::log_to_terminal(config, "error", run_scope, line);
             }
         } else {
-             debug!("Hook stderr: <empty>");
+            debug!("Hook stderr: <empty>");
         }
 
         if output.status.success() {
@@ -153,7 +189,7 @@ fn render_and_write(target: &str, content: &str, tera: &mut Tera, ctx: &TeraCont
     } else {
         target.to_string()
     };
-    
+
     debug!("Expanded target path: {}", target_expanded);
 
     let path = PathBuf::from(&target_expanded);

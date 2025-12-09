@@ -1,4 +1,4 @@
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, Criterion};
 use tera::{Context, Tera};
 
 fn bench_render_simple(c: &mut Criterion) {
@@ -31,19 +31,25 @@ Foreground: {{ colors.fg }}
     tera.add_raw_template("complex", complex_template).unwrap();
 
     let mut ctx = Context::new();
-    ctx.insert("colors", &serde_json::json!({
-        "bg": "#282a36",
-        "fg": "#f8f8f2",
-        "accent": "#bd93f9"
-    }));
-    ctx.insert("ansi_colors", &serde_json::json!([
-        {"name": "red", "value": "#ff5555"},
-        {"name": "green", "value": "#50fa7b"},
-        {"name": "yellow", "value": "#f1fa8c"},
-        {"name": "blue", "value": "#6272a4"},
-        {"name": "magenta", "value": "#ff79c6"},
-        {"name": "cyan", "value": "#8be9fd"}
-    ]));
+    ctx.insert(
+        "colors",
+        &serde_json::json!({
+            "bg": "#282a36",
+            "fg": "#f8f8f2",
+            "accent": "#bd93f9"
+        }),
+    );
+    ctx.insert(
+        "ansi_colors",
+        &serde_json::json!([
+            {"name": "red", "value": "#ff5555"},
+            {"name": "green", "value": "#50fa7b"},
+            {"name": "yellow", "value": "#f1fa8c"},
+            {"name": "blue", "value": "#6272a4"},
+            {"name": "magenta", "value": "#ff79c6"},
+            {"name": "cyan", "value": "#8be9fd"}
+        ]),
+    );
 
     c.bench_function("render complex template", |b| {
         b.iter(|| tera.render("complex", &ctx).unwrap())

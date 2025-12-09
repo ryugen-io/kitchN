@@ -255,7 +255,7 @@ mod tests {
                     file: "{msg}".to_string(),
                 },
                 logging: LoggingConfig {
-                    base_dir: "".to_string(), // will be set 
+                    base_dir: "".to_string(), // will be set
                     path_structure: "{app}/{scope}".to_string(),
                     filename_structure: "log.txt".to_string(),
                     timestamp_format: "%Y".to_string(),
@@ -281,7 +281,7 @@ mod tests {
 
         let expected_path = dir.path().join("default_app/MAIN/log.txt");
         assert!(expected_path.exists());
-        
+
         let content = fs::read_to_string(expected_path).unwrap();
         assert!(content.contains("test message"));
     }
@@ -292,7 +292,14 @@ mod tests {
         let mut config = create_mock_config();
         config.layout.logging.base_dir = dir.path().to_str().unwrap().to_string();
 
-        log_to_file(&config, "info", "MAIN", "test message", Some("OverriddenApp")).unwrap();
+        log_to_file(
+            &config,
+            "info",
+            "MAIN",
+            "test message",
+            Some("OverriddenApp"),
+        )
+        .unwrap();
 
         let expected_path = dir.path().join("OverriddenApp/MAIN/log.txt");
         assert!(expected_path.exists());

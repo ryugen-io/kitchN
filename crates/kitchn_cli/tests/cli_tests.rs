@@ -10,12 +10,16 @@ fn test_cli_pack_and_install() {
     let output_file = dir.path().join("test.bag");
 
     fs::create_dir_all(&source_dir).unwrap();
-    fs::write(source_dir.join("test.ing"), r#"[package]
+    fs::write(
+        source_dir.join("test.ing"),
+        r#"[package]
 name = "test"
 version = "0.1.0"
 authors = ["Test"]
 description = "Test ingredient"
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     cargo_bin_cmd!("kitchn")
         .arg("wrap")
