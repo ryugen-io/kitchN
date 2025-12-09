@@ -39,6 +39,55 @@ Both methods will:
 
 ---
 
+##  Quick Start
+
+Get up and running in 3 steps:
+
+```bash
+# 1. Install Kitchn
+just install
+
+# 2. Stock an example ingredient
+kitchn stock ./assets/ingredients/waybar.ing
+
+# 3. Apply all ingredients
+kitchn cook
+```
+
+### Typical Workflow
+
+1. **Edit your theme** in `~/.config/kitchn/theme.toml`
+2. **Run** `kitchn cook` to apply changes
+3. **Done!** All configured apps update automatically
+
+### Creating Your Own Ingredient
+
+```bash
+# Create a new ingredient file
+cat > my-app.ing << 'EOF'
+[package]
+name = "my-app-theme"
+version = "0.1.0"
+
+[[templates]]
+target = "~/.config/my-app/colors.conf"
+content = """
+background = "{{ colors.bg }}"
+foreground = "{{ colors.fg }}"
+accent = "{{ colors.primary }}"
+"""
+
+[hooks]
+reload = "pkill -USR1 my-app"
+EOF
+
+# Stock and cook
+kitchn stock my-app.ing
+kitchn cook
+```
+
+---
+
 ## Project Structure
 
 ```bash
@@ -163,15 +212,37 @@ just example-rust
 
 ### Ingredient Management
 ```bash
-# Install a single ingredient
+# Install a single ingredient or .bag package
 kitchn stock ./assets/ingredients/waybar.ing
+kitchn stock ./my-theme.bag
 
-# Cook (Sync) all installed ingredients
+# List all stocked ingredients
+kitchn pantry
+
+# Cook (apply) all ingredients to the system
 kitchn cook
 
-# Clean (Remove) all ingredients from pantry
+# Clean (remove) all ingredients from pantry
 kitchn pantry clean
 ```
+
+### Packaging
+```bash
+# Wrap multiple .ing files into a portable .bag package
+kitchn wrap ./my-ingredients/
+
+# Specify custom output path
+kitchn wrap ./my-ingredients/ --output ./my-theme.bag
+```
+
+### Performance Optimization
+```bash
+# Pre-compile config files into binary format for faster startup
+kitchn bake
+```
+
+> [!TIP]
+> Run `kitchn bake` after changing your configuration files (`theme.toml`, `icons.toml`, etc.) to cache them for instant loading.
 
 ### Logging
 ```bash
@@ -234,12 +305,20 @@ An **Ingredient** is a single TOML file that teaches Kitchn how to theme a speci
 
 ### Structure
 ```toml
-[meta]
-id = "waybar"
+[package]
+name = "waybar-theme"
+version = "0.1.0"
+authors = ["Your Name <you@example.com>"]
+description = "Waybar styling integration"
+license = "MIT"
 
 [[templates]]
 target = "~/.config/waybar/style.css"
 content = """
+* {
+    font-family: "{{ fonts.ui }}";
+    font-size: {{ fonts.size_ui }}px;
+}
 window#waybar {
     background-color: {{ colors.bg }};
     border-bottom: 2px solid {{ colors.primary }};
@@ -250,6 +329,94 @@ window#waybar {
 reload = "pkill -SIGUSR2 waybar"
 ```
 
+### Package Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Unique identifier for the ingredient |
+| `version` | Yes | Semantic version (e.g., `0.1.0`) |
+| `authors` | No | List of author names and emails |
+| `description` | No | Short description of what this ingredient themes |
+| `license` | No | License identifier (e.g., `MIT`, `GPL-3.0`) |
+
+---
+
+##  Bags (`.bag`)
+
+A **Bag** is a portable zip archive containing multiple `.ing` files. Use bags to distribute complete theme collections.
+
+### Creating a Bag
+```bash
+# Package all .ing files from a directory
+kitchn wrap ./my-theme-ingredients/
+
+# Creates: my-theme-ingredients.bag
+```
+
+### Installing a Bag
+```bash
+# Extract and stock all ingredients from a bag
+kitchn stock ./my-theme.bag
+```
+
+> [!NOTE]
+> Bags are simply ZIP files with a `.bag` extension. You can inspect their contents with any archive tool.
+
+---
+
+##  Template Variables
+
+Ingredients use the [Tera](https://keats.github.io/tera/) templating engine. The following variables are available:
+
+### Colors (`colors.*`)
+All colors defined in `theme.toml`:
+```
+{{ colors.bg }}         → #161925
+{{ colors.fg }}         → #F8F8F2
+{{ colors.primary }}    → #BD93F9
+{{ colors.secondary }}  → #FF79C6
+{{ colors.success }}    → #50FA7B
+{{ colors.error }}      → #FF5555
+{{ colors.warn }}       → #FFB86C
+{{ colors.info }}       → #8BE9FD
+```
+
+### Fonts (`fonts.*`)
+```
+{{ fonts.mono }}        → JetBrainsMono Nerd Font
+{{ fonts.ui }}          → Roboto
+{{ fonts.size_mono }}   → 10
+{{ fonts.size_ui }}     → 11
+```
+
+### Icons (`icons.*`)
+Icons from the active icon set (configured via `theme.toml`):
+```
+{{ icons.success }}     →  (or * in ASCII mode)
+{{ icons.error }}       →  (or ! in ASCII mode)
+{{ icons.warn }}        →
+{{ icons.info }}        →
+{{ icons.net }}         → 󰖩
+```
+
+### Tera Filters
+Kitchn provides custom filters for common transformations:
+
+| Filter | Input | Output | Use Case |
+|--------|-------|--------|----------|
+| `hex_to_rgb` | `#BD93F9` | `[189, 147, 249]` | JSON/Chrome themes |
+
+**Example:**
+```toml
+content = """
+{
+  "colors": {
+    "toolbar": {{ colors.bg | hex_to_rgb }}
+  }
+}
+"""
+```
+
 ---
 
 ##  Configuration
@@ -258,12 +425,104 @@ Located in `~/.config/kitchn/`.
 
 | File | Purpose |
 |------|---------|
-| `theme.toml` | Colors & Fonts |
-| `icons.toml` | Icon abstractions (nerdfont/ascii) |
-| `layout.toml` | Log structure & formatting |
-| `cookbook.toml` | Pre-defined messages & dictionary |
+| `theme.toml` | Colors, fonts, and visual settings |
+| `icons.toml` | Icon sets (Nerd Font, ASCII fallback) |
+| `layout.toml` | Log message structure and formatting |
+| `dictionary.toml` | Pre-defined log message presets |
 
 You may split your configuration using `include = ["path/to/extra.toml"]`.
+
+### theme.toml
+```toml
+[meta]
+name = "Sweet Dracula"
+
+[settings]
+active_icons = "nerdfont"  # or "ascii"
+
+[colors]
+bg = "#161925"
+fg = "#F8F8F2"
+primary = "#BD93F9"
+# ... see full palette above
+
+[fonts]
+mono = "JetBrainsMono Nerd Font"
+ui = "Roboto"
+size_mono = "10"
+size_ui = "11"
+```
+
+### icons.toml
+```toml
+[nerdfont]
+success = ""
+error = ""
+warn = ""
+info = ""
+
+[ascii]
+success = "*"
+error = "!"
+warn = "!!"
+info = "i"
+```
+
+### layout.toml
+```toml
+[tag]
+prefix = "["
+suffix = "]"
+transform = "lowercase"
+
+[labels]
+error = "error"
+success = "success"
+
+[structure]
+terminal = "{tag} {scope} {icon} {msg}"
+file = "{timestamp} {tag} {msg}"
+
+[logging]
+base_dir = "~/.local/state/hyprcore/logs"
+path_structure = "{year}/{month}/{scope}"
+```
+
+### dictionary.toml
+Define reusable log presets:
+```toml
+[presets.boot_ok]
+level = "success"
+scope = "SYSTEM"
+msg = "startup complete"
+
+[presets.deploy_fail]
+level = "error"
+scope = "DEPLOY"
+msg = "deployment failed"
+```
+
+Use presets via CLI:
+```bash
+kitchn-log boot_ok
+kitchn-log deploy_fail
+```
+
+### Rich Text in Messages
+Log messages support inline formatting tags:
+```toml
+msg = "Welcome to <primary>Kitchn</primary>! Status: <success>OK</success>"
+```
+
+| Tag | Effect |
+|-----|--------|
+| `<bold>` | Bold text |
+| `<primary>` | Primary color (purple) |
+| `<secondary>` | Secondary color (pink) |
+| `<success>` | Success color (green) |
+| `<error>` | Error color (red) |
+| `<warn>` | Warning color (orange) |
+| `<info>` | Info color (cyan) |
 
 ---
 
