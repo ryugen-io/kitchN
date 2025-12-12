@@ -27,6 +27,9 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: aarch64-linux
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            name: aarch64-linux-musl
 
     steps:
       - name: Checkout
@@ -38,7 +41,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Setup cross-compilation toolchain
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        if: contains(matrix.target, 'aarch64')
         uses: taiki-e/setup-cross-toolchain-action@v1
         with:
           target: ${{ matrix.target }}
@@ -46,8 +49,13 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v2
 
-      - name: Build release binaries
+      - name: Build release binaries (Default)
+        if: (!contains(matrix.target, 'musl'))
         run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Build release binaries (Musl - Skip FFI)
+        if: contains(matrix.target, 'musl')
+        run: cargo build --release --target ${{ matrix.target }} --bin kitchn --bin k-log
 
       - name: Generate C header
         run: |
