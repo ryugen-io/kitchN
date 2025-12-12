@@ -61,7 +61,7 @@ jobs:
         run: |
           cargo install cbindgen --locked
           cbindgen --config crates/kitchn_ffi/cbindgen.toml \
-                   --crate kitchn_ffi \
+                   --crate k-ffi \
                    --output include/kitchn.h
 
       - name: Package release
