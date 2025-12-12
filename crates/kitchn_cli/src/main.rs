@@ -4,7 +4,7 @@ mod logging;
 
 use anyhow::{Context, Result, anyhow};
 use args::{Cli, Commands};
-use clap::{Parser, CommandFactory};
+use clap::{CommandFactory, Parser};
 use logging::{init_logging, run_socket_watcher, spawn_debug_viewer};
 use std::env;
 use std::fs;
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
         Ok(f) => Some(f),
         Err(e) => {
             warn!("Failed to acquire global lock: {}", e);
-            eprintln!("Error: Another instance of kitchn is already running.");
+            eprintln!("Error: {}", e);
             return Ok(());
         }
     };
@@ -63,6 +63,8 @@ fn acquire_lock() -> Result<fs::File> {
         .and_then(|d| d.runtime_dir().map(|p| p.to_path_buf()))
         .unwrap_or_else(env::temp_dir);
 
+    debug!("Using runtime directory for lock: {:?}", runtime_dir);
+
     if !runtime_dir.exists() {
         let _ = fs::create_dir_all(&runtime_dir);
     }
@@ -73,7 +75,7 @@ fn acquire_lock() -> Result<fs::File> {
         .write(true)
         .truncate(true)
         .open(&lock_path)
-        .context("Failed to open lock file")?;
+        .with_context(|| format!("Failed to open lock file at {:?}", lock_path))?;
 
     let fd = file.as_raw_fd();
     let ret = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
@@ -81,8 +83,10 @@ fn acquire_lock() -> Result<fs::File> {
     if ret != 0 {
         let err = std::io::Error::last_os_error();
         return Err(anyhow!(
-            "Could not acquire lock (another instance running?): {}",
-            err
+            "Could not acquire lock for {:?} (another instance running?). OS Error: {} (code: {:?})",
+            lock_path,
+            err,
+            err.raw_os_error()
         ));
     }
 
