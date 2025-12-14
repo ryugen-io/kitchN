@@ -22,7 +22,7 @@ content = """
 [Appearance]
 color_scheme_path=~/.config/qt5ct/colors/Sweet-Dracula.conf
 custom_palette=true
-icon_theme=Colloid-Purple-Dracula-Dark
+icon_theme=Nordzy-purple-dark
 standard_dialogs=default
 style=Fusion
 

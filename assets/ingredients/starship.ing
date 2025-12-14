@@ -1,0 +1,91 @@
+[package]
+name = "starship"
+version = "0.1.0"
+authors = ["Kitchn"]
+description = "Starship prompt theme with trapezoid segments"
+license = "MIT"
+
+[[templates]]
+target = "~/.config/starship/starship.toml"
+content = '''
+add_newline = false
+
+format = "${custom.ssh}${custom.session}$directory$git_branch$rust$python$nodejs$time$line_break$character"
+
+[character]
+success_symbol = "[ =>](fg:{{ colors.success }})"
+error_symbol = "[ =>](fg:{{ colors.error }})"
+vicmd_symbol = "[ <=](fg:{{ colors.secondary }})"
+
+[custom.ssh]
+command = "echo '󰞷 '"
+shell = ["bash", "--noprofile", "--norc"]
+when = "[[ -n $SSH_CONNECTION ]] || [[ -n $SSH_TTY ]]"
+format = "[](fg:{{ colors.tabs }})[$output]($style)[](fg:{{ colors.tabs }})"
+style = "bg:{{ colors.tabs }} fg:{{ colors.fg }}"
+
+[custom.session]
+command = "~/.local/lib/starship/sessions"
+when = "true"
+format = "[](fg:{{ colors.bg }})[ $output]($style)[](fg:{{ colors.bg }})"
+style = "bg:{{ colors.bg }} fg:{{ colors.fg }}"
+
+[directory]
+style = "bg:{{ colors.selection_bg }} fg:{{ colors.fg }}"
+format = "[](fg:{{ colors.selection_bg }})[$path]($style)[](fg:{{ colors.selection_bg }})"
+truncate_to_repo = false
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "bg:{{ colors.success }} fg:{{ colors.bg }}"
+format = "[](fg:{{ colors.success }})[$symbol$branch$git_status]($style)[](fg:{{ colors.success }})"
+truncation_length = 32
+truncation_symbol = "…"
+
+[git_status]
+format = "$ahead_behind"
+style = ""
+conflicted = ""
+deleted = ""
+renamed = ""
+modified = ""
+staged = ""
+stashed = ""
+untracked = ""
+ahead = "|⇡$count"
+behind = "|⇣$count"
+diverged = "|⇕$ahead_count/$behind_count"
+
+[rust]
+symbol = " "
+style = "bg:{{ colors.orange }} fg:{{ colors.bg }}"
+format = "[](fg:{{ colors.orange }})[$symbol$version]($style)[](fg:{{ colors.orange }})"
+
+[python]
+symbol = " "
+style = "bg:{{ colors.magenta }} fg:{{ colors.fg }}"
+format = "[](fg:{{ colors.magenta }})[$symbol$virtualenv]($style)[](fg:{{ colors.magenta }})"
+python_binary = "python3"
+pyenv_version_name = false
+detect_extensions = []
+detect_files = []
+detect_folders = []
+
+[nodejs]
+symbol = " "
+style = "bg:{{ colors.bright_black }} fg:{{ colors.fg }}"
+format = "[](fg:{{ colors.bright_black }})[$symbol$version]($style)[](fg:{{ colors.bright_black }})"
+detect_extensions = ["js", "mjs", "cjs", "ts", "tsx", "jsx"]
+detect_files = ["package.json", "yarn.lock", "pnpm-lock.yaml", "package-lock.json"]
+detect_folders = ["node_modules"]
+
+[time]
+disabled = false
+time_format = "%H:%M"
+style = "bg:{{ colors.secondary }} fg:{{ colors.bg }}"
+format = "[](fg:{{ colors.secondary }})[$time]($style)[](fg:{{ colors.secondary }})"
+'''
+
+[hooks]

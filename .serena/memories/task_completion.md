@@ -1,6 +1,5 @@
-# Single Instance Check Debugging (2025-12-12)
+# CI Fix (2025-12-12)
 
-Implemented detailed error reporting for `kitchn` single-instance check failure.
-- File modified: `crates/kitchn_cli/src/main.rs`
-- Change: `acquire_lock` now includes the lock file path and OS error code in the panic/error message.
-- Reason: User reported "Another instance... running" on Void Linux (musl) despite no other instance. The new error message will expose the underlying cause (permissions, path, or flock support).
+Fixed CI compilation errors by switching to `nightly` toolchain.
+- Problem: `cargo check` failed in CI because `stable` toolchain does not yet support `edition = "2024"`.
+- Solution: Updated `.github/workflows/ci.yml` and `.github/workflows/release.yml` to use `dtolnay/rust-toolchain@nightly`.

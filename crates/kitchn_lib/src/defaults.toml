@@ -38,7 +38,6 @@ scope = "INSTALL"
 msg = "installed successfully"
 
 # Actions
-# Actions
 [presets.install_start]
 level = "kitchn"
 scope = "INSTALL"
@@ -311,5 +310,3 @@ msg = "output"
 level = "error"
 scope = "HOOK"
 msg = "error"
-
-

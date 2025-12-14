@@ -12,7 +12,7 @@ content = """
 [Settings]
 gtk-application-prefer-dark-theme=1
 gtk-font-name={{ fonts.ui }} {{ fonts.size_ui }}
-gtk-icon-theme-name=Colloid-Purple-Dracula
+gtk-icon-theme-name=Nordzy-purple-dark
 gtk-cursor-theme-name=oreo_sweet_dracula_violet_small
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
