@@ -13,3 +13,5 @@ assets/examples/python/output.fpkg
 # In-Memoria
 .in-memoria/
 in-memoria.db
+in-memoria-vectors.db/
+
