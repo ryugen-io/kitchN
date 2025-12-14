@@ -1,8 +1,0 @@
-refactor(lib,ffi): remove legacy id and streamline FFI
-
-- Removed deprecated `id` field from `IngredientManifest` in `kitchn_lib`.
-- Renamed `kitchn_store` to `kitchn_cook_file` in `kitchn_ffi` to clarify intent.
-- Implemented `KitchnPantry` opaque struct and added pantry management functions (`load`, `save`, `add`, `remove`, `count`) to `kitchn_ffi`.
-- Updated logging and error handling in FFI to use `KitchnContext` and `KitchnPantry`.
-- Updated tests and benchmarks to reflect the removal of `id`.
-- Verified with `just pre-commit`.

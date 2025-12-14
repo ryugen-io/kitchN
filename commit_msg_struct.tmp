@@ -1,0 +1,9 @@
+refactor(structure): standardize directory naming to k-*
+
+- Renamed crates directories to match `kitchnsink` convention:
+  - `crates/kitchn_lib` -> `crates/k-lib`
+  - `crates/kitchn_cli` -> `crates/k-bin`
+  - `crates/kitchn_ffi` -> `crates/k-ffi`
+  - `crates/kitchn_log` -> `crates/k-log`
+- Updated workspace and crate-level `Cargo.toml` files.
+- Verified build and tests.

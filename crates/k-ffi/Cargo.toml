@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-k-lib = { path = "../kitchn_lib" }
+k-lib = { path = "../k-lib" }
 libc = "0.2.169"
 toml = "0.8.19"
 serde = { version = "1.0.216", features = ["derive"] }

@@ -1,10 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/kitchn_cli",
-    "crates/kitchn_ffi",
-    "crates/kitchn_lib",
-    "crates/kitchn_log",
+    "crates/k-lib",
+    "crates/k-ffi",
+    "crates/k-bin",
+    "crates/k-log",
 ]
 exclude = ["assets/examples"]
 

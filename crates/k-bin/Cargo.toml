@@ -10,7 +10,7 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-k-lib = { path = "../kitchn_lib" }
+k-lib = { path = "../k-lib" }
 clap = { version = "4.5.23", features = ["derive"] }
 tera = "1.20.1"
 serde = { version = "1.0.216", features = ["derive"] }
