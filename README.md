@@ -113,10 +113,11 @@ kitchn cook
 ```bash
 .
 ├── crates/
-│   ├── kitchn_lib/      # Core Logic (Rust 2024)
-│   ├── kitchn_ffi/      # FFI Interface (Rust 2021, C-ABI)
-│   ├── kitchn_cli/      # CLI wrapper (`kitchn`)
-│   └── kitchn_log/      # Logging CLI (`kitchn-log`)
+├── crates/
+│   ├── k-lib/           # Core Logic (Rust 2024)
+│   ├── k-ffi/           # FFI Interface (Rust 2021, C-ABI)
+│   ├── k-bin/           # CLI wrapper (`kitchn`)
+│   └── k-log/           # Logging CLI (`kitchn-log`)
 ├── include/             # Generated C headers (kitchn.h)
 ├── assets/
 │   ├── ingredients/     # Example .ing files
@@ -130,10 +131,10 @@ kitchn cook
 ```mermaid
 graph TD
     %% Nodes
-    CLI(kitchn_cli <br> Binary)
-    Log(kitchn_log <br> Binary)
-    Lib(kitchn_lib <br> Rust Crate)
-    FFI(kitchn_ffi <br> Rust Crate)
+    CLI(k-bin <br> Binary)
+    Log(k-log <br> Binary)
+    Lib(k-lib <br> Rust Crate)
+    FFI(k-ffi <br> Rust Crate)
     Headers(kitchn.h <br> C Header)
     DB[(Pastry DB <br> Sled/KV)]
     Config[Configuration <br> TOML]
@@ -171,8 +172,8 @@ graph TD
     style DB fill:#ff9,stroke:#333,stroke-width:1px,color:#000
     style Log fill:#fbb,stroke:#333,stroke-width:1px,color:#000
 ```
--   **Logic**: `kitchn_lib` (Rust 2024) handles all processing, rendering, and logic.
--   **Interface**: `kitchn_ffi` (Rust 2021) provides a stable C-ABI and auto-generates `kitchn.h` using `cbindgen`.
+-   **Logic**: `k-lib` (Rust 2024) handles all processing, rendering, and logic.
+-   **Interface**: `k-ffi` (Rust 2021) provides a stable C-ABI and auto-generates `kitchn.h` using `cbindgen`.
 -   **Storage**: Ingredients are ingested into a high-performance **binary database** (`pastry.bin`) located in `~/.local/share/kitchn/`, ensuring instant access and clean storage.
 
 ###  The "Sweet Dracula" Standard

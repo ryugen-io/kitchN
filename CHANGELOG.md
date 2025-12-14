@@ -37,3 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TOML-based configuration system
 - FFI bindings for C/C++ and Python
 - Ingredient templating with Tera
+
+## [0.3.0] - 2025-12-14
+
+### Changed
+- **Breaking**: Renamed crates to short-form:
+  - `kitchn_lib` -> `k-lib`
+  - `kitchn_ffi` -> `k-ffi`
+  - `kitchn_cli` -> `k-bin`
+  - `kitchn_log` -> `k-log`
+- **FFI**: Major update to C-ABI.
+  - Replaced context-based API with `KitchnPantry`.
+  - Added `kitchn_pantry_*` functions for direct database manipulation.
+
+### Removed
+- Deprecated `id` field from `IngredientManifest`.

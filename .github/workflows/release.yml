@@ -60,7 +60,7 @@ jobs:
       - name: Generate C header
         run: |
           cargo install cbindgen --locked
-          cbindgen --config crates/kitchn_ffi/cbindgen.toml \
+          cbindgen --config crates/k-ffi/cbindgen.toml \
                    --crate k-ffi \
                    --output include/kitchn.h
 
