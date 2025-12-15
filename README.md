@@ -245,6 +245,10 @@ kitchn cook
 
 # Clean (remove) all ingredients from pantry
 kitchn pantry clean
+
+# Enable/Disable ingredients
+kitchn pantry disable waybar-theme
+kitchn pantry enable waybar-theme
 ```
 
 ### Packaging
@@ -359,6 +363,7 @@ reload = "pkill -SIGUSR2 waybar"
 | `authors` | No | List of author names and emails |
 | `description` | No | Short description of what this ingredient themes |
 | `license` | No | License identifier (e.g., `MIT`, `GPL-3.0`) |
+| `ignored` | No | Set to `true` to disable without deleting (Default: `false`) |
 
 ---
 
