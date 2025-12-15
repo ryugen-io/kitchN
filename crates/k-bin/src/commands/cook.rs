@@ -11,10 +11,21 @@ pub fn execute(db: &Pantry, config: &Cookbook, force: bool) -> Result<()> {
         return Ok(());
     }
 
-    let count = ingredients.len();
+    let total = ingredients.len();
     let mut hook_failures = 0;
+    let mut skipped = 0;
 
     for pkg in ingredients {
+        if pkg.meta.ignored {
+            log_msg(
+                config,
+                "cook_skip",
+                &format!("ignoring <secondary>{}</secondary> (disabled)", pkg.meta.name),
+            );
+            skipped += 1;
+            continue;
+        }
+
         log_msg(
             config,
             "cook_start",
@@ -25,20 +36,25 @@ pub fn execute(db: &Pantry, config: &Cookbook, force: bool) -> Result<()> {
         }
     }
 
+    let cooked = total - skipped;
+
     if hook_failures > 0 {
         log_msg(
             config,
             "cook_ok",
             &format!(
-                "cooked {} ingredients successfully but {} hooks failed",
-                count, hook_failures
+                "cooked {} ingredients successfully ({} skipped) but {} hooks failed",
+                cooked, skipped, hook_failures
             ),
         );
     } else {
         log_msg(
             config,
             "cook_ok",
-            &format!("cooked {} ingredients successfully", count),
+            &format!(
+                "cooked {} ingredients successfully ({} skipped)",
+                cooked, skipped
+            ),
         );
     }
 

@@ -20,6 +20,8 @@ pub struct IngredientManifest {
     pub description: String,
     pub repository: Option<String>,
     pub license: Option<String>,
+    #[serde(default)]
+    pub ignored: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

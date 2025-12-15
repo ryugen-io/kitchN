@@ -21,6 +21,34 @@ pub fn execute(command: Option<PantryCommands>, db: &mut Pantry, config: &Cookbo
                 );
             }
         }
+        Some(PantryCommands::Enable { name }) => {
+            if db.set_ignored(&name, false)? {
+                db.save()?;
+                log_msg(config, "pantry_ok", &format!("enabled ingredient '{}'", name));
+            } else {
+                log_msg(
+                    config,
+                    "pantry_fail",
+                    &format!("ingredient '{}' not found", name),
+                );
+            }
+        }
+        Some(PantryCommands::Disable { name }) => {
+            if db.set_ignored(&name, true)? {
+                db.save()?;
+                log_msg(
+                    config,
+                    "pantry_ok",
+                    &format!("disabled ingredient '{}'", name),
+                );
+            } else {
+                log_msg(
+                    config,
+                    "pantry_fail",
+                    &format!("ingredient '{}' not found", name),
+                );
+            }
+        }
         None => {
             list_pantry(db, config);
         }
@@ -45,6 +73,9 @@ fn list_pantry(db: &Pantry, config: &Cookbook) {
             pkg.meta.description.italic(),
             format!("by {}", pkg.meta.authors.join(", ")).dimmed()
         );
+        if pkg.meta.ignored {
+            println!("    {}", "[DISABLED]".red().bold());
+        }
         println!();
     }
 }

@@ -1,0 +1,28 @@
+[package]
+name = "zellij"
+version = "0.1.0"
+authors = ["Kitchn"]
+description = "Zellij terminal multiplexer theme"
+license = "MIT"
+
+[[templates]]
+target = "~/.config/zellij/themes/kitchn.kdl"
+content = '''
+themes {
+    kitchn {
+        fg "{{ colors.fg }}"
+        bg "{{ colors.bg }}"
+        black "{{ colors.black }}"
+        red "{{ colors.red }}"
+        green "{{ colors.green }}"
+        yellow "{{ colors.yellow }}"
+        blue "{{ colors.blue }}"
+        magenta "{{ colors.magenta }}"
+        cyan "{{ colors.cyan }}"
+        white "{{ colors.fg }}"
+        orange "{{ colors.orange }}"
+    }
+}
+'''
+
+[hooks]

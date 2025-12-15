@@ -25,6 +25,14 @@ pub fn process_command(cmd: Commands) -> Result<()> {
             db.save()?;
 
             for pkg in installed {
+                if pkg.meta.ignored {
+                    log_msg(
+                        &config,
+                        "cook_skip",
+                        &format!("ignoring <secondary>{}</secondary> (disabled)", pkg.meta.name),
+                    );
+                    continue;
+                }
                 log_msg(
                     &config,
                     "cook_start",

@@ -82,6 +82,16 @@ impl Pantry {
         self.ingredients.clear();
     }
 
+    pub fn set_ignored(&mut self, name: &str, state: bool) -> Result<bool> {
+        if let Some(pkg) = self.ingredients.get_mut(name) {
+            pkg.meta.ignored = state;
+            debug!("Set ignored status for {} to {}", name, state);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     pub fn list(&self) -> Vec<&Ingredient> {
         let mut list: Vec<&Ingredient> = self.ingredients.values().collect();
         list.sort_by_key(|f| &f.meta.name);

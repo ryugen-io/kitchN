@@ -49,4 +49,8 @@ pub enum Commands {
 pub enum PantryCommands {
     /// Remove all ingredients from the pantry
     Clean,
+    /// Enable an ingredient (remove ignored status)
+    Enable { name: String },
+    /// Disable an ingredient (set ignored status)
+    Disable { name: String },
 }

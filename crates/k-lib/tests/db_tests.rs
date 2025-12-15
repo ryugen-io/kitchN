@@ -11,6 +11,7 @@ fn create_ingredient(name: &str) -> Ingredient {
             description: "".to_string(),
             repository: None,
             license: None,
+            ignored: false,
         },
         templates: vec![],
         files: vec![],
